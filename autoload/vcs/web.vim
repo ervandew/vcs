@@ -1,242 +1,358 @@
 " Author:  Eric Van Dewoestine
 "
-" Description: {{{
-"   see http://eclim.org/vim/common/vcs.html
+" License: {{{
+"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   All rights reserved.
 "
-" License:
+"   Redistribution and use of this software in source and binary forms, with
+"   or without modification, are permitted provided that the following
+"   conditions are met:
 "
-" Copyright (C) 2005 - 2010  Eric Van Dewoestine
+"   * Redistributions of source code must retain the above
+"     copyright notice, this list of conditions and the
+"     following disclaimer.
 "
-" This program is free software: you can redistribute it and/or modify
-" it under the terms of the GNU General Public License as published by
-" the Free Software Foundation, either version 3 of the License, or
-" (at your option) any later version.
+"   * Redistributions in binary form must reproduce the above
+"     copyright notice, this list of conditions and the
+"     following disclaimer in the documentation and/or other
+"     materials provided with the distribution.
 "
-" This program is distributed in the hope that it will be useful,
-" but WITHOUT ANY WARRANTY; without even the implied warranty of
-" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-" GNU General Public License for more details.
+"   * Neither the name of Eric Van Dewoestine nor the names of its
+"     contributors may be used to endorse or promote products derived from
+"     this software without specific prior written permission of
+"     Eric Van Dewoestine.
 "
-" You should have received a copy of the GNU General Public License
-" along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"
+"   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+"   IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+"   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+"   PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+"   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+"   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+"   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+"   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+"   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+"   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+"   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 " }}}
 
-if !exists('g:eclim_vcs_web_loaded')
-  let g:eclim_vcs_web_loaded = 1
+if !exists('g:vcs_web_loaded')
+  let g:vcs_web_loaded = 1
 else
   finish
 endif
 
 " Script Variables {{{
-let s:vcs_viewers = {
-    \ 'viewvc': 'http://${host}/viewvc/${path}',
-    \ 'trac': 'http://${host}/${path}',
-    \ 'redmine': 'http://${host}/repositories/<cmd>/${path}',
-    \ 'hgcgi': 'http://${host}/${path}',
-    \ 'hgserve': 'http://${host}/${path}',
-    \ 'gitweb': 'http://${host}/git/gitweb.cgi?p=${path}',
-    \ 'github': 'http://github.com/${username}/${project}',
-    \ 'bitbucket': 'http://bitbucket.org/${username}/${project}',
-    \ 'googlecode': 'http://code.google.com/p/${project}',
-  \ }
+  let s:vcs_viewers = {
+      \ 'trac': 'http://${host}/${path}',
+      \ 'redmine': 'http://${host}/repositories/<cmd>/${path}',
+      \ 'hgcgi': 'http://${host}/${path}',
+      \ 'hgserve': 'http://${host}/${path}',
+      \ 'gitweb': 'http://${host}/git/gitweb.cgi?p=${path}',
+      \ 'github': 'http://github.com/${username}/${project}',
+      \ 'bitbucket': 'http://bitbucket.org/${username}/${project}',
+      \ 'googlecode': 'http://code.google.com/p/${project}',
+    \ }
 
-let s:vcs_viewer_saved = {}
+  let s:vcs_viewer_saved = {}
+
+  let s:win_browsers = [
+      \ 'C:/Program Files/Opera/Opera.exe',
+      \ 'C:/Program Files/Mozilla Firefox/firefox.exe',
+      \ 'C:/Program Files/Internet Explorer/iexplore.exe'
+    \ ]
+
+  let s:browsers = [
+      \ 'xdg-open', 'opera', 'firefox', 'konqueror',
+      \ 'epiphany', 'mozilla', 'netscape', 'iexplore'
+    \ ]
 " }}}
 
 " GetVcsWebFunction(type, func_name) {{{
 " Gets a reference to the proper vcs web function.
-" Ex. let GetLogUrl = eclim#vcs#web#GetVcsWebFunction('viewvc', 'GetLogUrl')
-function eclim#vcs#web#GetVcsWebFunction(type, func_name)
-  if a:type == 'viewvc'
-    runtime autoload/eclim/vcs/impl/viewvc.vim
-  elseif a:type == 'trac'
-    runtime autoload/eclim/vcs/impl/trac.vim
-  elseif a:type == 'redmine'
-    runtime autoload/eclim/vcs/impl/redmine.vim
-  elseif a:type == 'hgcgi'
-    runtime autoload/eclim/vcs/impl/hgcgi.vim
-  elseif a:type == 'hgserve'
-    runtime autoload/eclim/vcs/impl/hgserve.vim
-  elseif a:type == 'gitweb'
-    runtime autoload/eclim/vcs/impl/gitweb.vim
-  endif
-
+" Ex. let GetLogUrl = vcs#web#GetVcsWebFunction('github', 'GetLogUrl')
+function vcs#web#GetVcsWebFunction(type, func_name)
   try
-    return function('eclim#vcs#impl#' . a:type . '#' . a:func_name)
+    return function('vcs#impl#' . a:type . '#' . a:func_name)
   catch /E700:.*/
-    call eclim#util#EchoError('This function is not supported by "' . a:type . '".')
+    call vcs#util#EchoError('This function is not supported by "' . a:type . '".')
     return
   endtry
 endfunction " }}}
 
 " VcsWeb(url_func, ...) {{{
-function eclim#vcs#web#VcsWeb(url_func, ...)
-  let vcs = eclim#vcs#util#GetVcsType()
+function vcs#web#VcsWeb(url_func, ...)
+  let vcs = vcs#util#GetVcsType()
   if vcs == ''
     return
   endif
 
-  let type = eclim#project#util#GetProjectSetting('org.eclim.project.vcs.web.viewer')
-  let root = eclim#project#util#GetProjectSetting('org.eclim.project.vcs.web.url')
+  let settings = vcs#util#GetSettings()
+  let viewer = get(settings, 'web_viewer', '')
+  let url = get(settings, 'web_url', '')
 
-  if type(type) == 0 || type(root) == 0 || type == '' || root == ''
-    let type = get(s:vcs_viewer_saved, 'type', '')
-    let root = get(s:vcs_viewer_saved, 'root', '')
+  if viewer == '' || url == ''
+    let viewer = get(s:vcs_viewer_saved, 'viewer', viewer)
+    let url = get(s:vcs_viewer_saved, 'url', url)
     let prompt = 1
 
-    if root == ''
-      let response = eclim#util#PromptConfirm(
-        \ "VcsWeb commands requires the following project settings\n" .
-        \ "  org.eclim.project.vcs.web.viewer\n" .
-        \ "  org.eclim.project.vcs.web.url\n\n" .
-        \ "Would you like to enter these values?", g:EclimInfoHighlight)
+    if url == ''
+      let response = vcs#util#PromptConfirm(
+        \ "VcsWeb commands require that the 'web_viewer' and 'web_url'\n" .
+        \ "settings for your repository be set in g:VcsRepositorySettings.\n" .
+        \ "Would you like to temporarily supply these values?")
       if response != 1
         return
       endif
     else
-      let response = eclim#util#PromptConfirm(
+      let response = vcs#util#PromptConfirm(
         \ "Using values\n" .
-        \ "  viewer: " . type . "\n" .
-        \ "     url: " . root . "\n" .
-        \ "Continue using these values?", g:EclimInfoHighlight)
+        \ "  viewer: " . viewer . "\n" .
+        \ "     url: " . url . "\n" .
+        \ "Continue using these values?")
       let prompt = response != 1
     endif
 
     if prompt
       " TODO: maybe filter types by the vcs
       let types = sort(keys(s:vcs_viewers))
-      let response = eclim#util#PromptList(
-        \ 'Choose the appropriate web viewer', types, g:EclimInfoHighlight)
+      let response = vcs#util#PromptList(
+        \ 'Choose the appropriate web viewer', types)
       if response < 0
         return
       endif
 
-      let type = types[response]
-      let root = s:vcs_viewers[type]
-      let vars = split(substitute(root, '.\{-}\(\${\w\+}\).\{-}\|.*', '\1 ', 'g'))
-      exec "echohl " . g:EclimInfoHighlight
+      let viewer = types[response]
+      let url = s:vcs_viewers[viewer]
+      let vars = split(substitute(url, '.\{-}\(\${\w\+}\).\{-}\|.*', '\1 ', 'g'))
+      echohl Statement
       try
         for var in vars
           redraw
-          echo "Building url: " . root . "\n"
+          echo "Building url: " . url . "\n"
           let varname = substitute(var, '\${\|}', '', 'g')
           let response = input("Please enter the " . varname . ": ")
           if response == ''
             return
           endif
-          let root = substitute(root, var, response, '')
+          let url = substitute(url, var, response, '')
         endfor
       finally
         echohl None
       endtry
 
-      let s:vcs_viewer_saved = {'type': type, 'root': root}
-
-      if eclim#project#util#IsCurrentFileInProject(0)
-        let response = eclim#util#PromptConfirm(
-          \ "  org.eclim.project.vcs.web.viewer=" . type . "\n" .
-          \ "  org.eclim.project.vcs.web.url=" . root . "\n\n" .
-          \ "Would you like to persist these values?", g:EclimInfoHighlight)
-        if response > 0
-          call eclim#project#util#SetProjectSetting(
-            \ 'org.eclim.project.vcs.web.viewer', type)
-          call eclim#project#util#SetProjectSetting(
-            \ 'org.eclim.project.vcs.web.url', root)
-        endif
-      endif
-
+      let s:vcs_viewer_saved = {'viewer': viewer, 'url': url}
     endif
   endif
 
-  if root =~ '/$'
-    let root = root[:-2]
-  elseif type(root) == 0 && root == 0
+  if url =~ '/$'
+    let url = url[:-2]
+  elseif type(url) == 0 && url == 0
     return
   endif
 
-  let path = eclim#vcs#util#GetRelativePath(expand('%:p'))
-  if path == ''
-    call eclim#util#EchoError('Current file is not under a supported version control.')
+  let path = exists('b:filename') ? b:filename : expand('%:p')
+  let root = vcs#util#GetRoot(a:path)
+  let path = vcs#util#GetRelativePath(path)
+  if root == ''
+    call vcs#util#EchoError('Current file is not under a supported version control.')
     return
   endif
 
-  let GetUrl = eclim#vcs#web#GetVcsWebFunction(type, a:url_func)
+  let GetUrl = vcs#web#GetVcsWebFunction(viewer, a:url_func)
   if type(GetUrl) != 2
     return
   endif
-  let url = GetUrl(root, path, a:000)
+  let url = GetUrl(url, path, a:000)
   if url == '0'
     return
   endif
 
-  call eclim#web#OpenUrl(url, 1)
+  call vcs#web#OpenUrl(url)
 endfunction " }}}
 
 " VcsWebLog(revision) {{{
 " View the vcs web log.
-function eclim#vcs#web#VcsWebLog(revision)
-  let path = eclim#vcs#util#GetRelativePath(expand('%:p'))
-  let revision = a:revision != '' ? a:revision : eclim#vcs#util#GetRevision(path)
-  call eclim#vcs#web#VcsWeb('GetLogUrl', revision)
+function vcs#web#VcsWebLog(revision)
+  let revision = a:revision
+  if revision == ''
+    let path = exists('b:filename') ? b:filename : expand('%:p')
+    let path = vcs#util#GetRelativePath(path)
+    let revision = vcs#util#GetRevision(path)
+  endif
+  call vcs#web#VcsWeb('GetLogUrl', revision)
 endfunction " }}}
 
 " VcsWebChangeSet(revision) {{{
 " View the revision info for the supplied or current revision of the
 " current file.
-function eclim#vcs#web#VcsWebChangeSet(revision)
+function vcs#web#VcsWebChangeSet(revision)
   let revision = a:revision
   if revision == ''
-    let path = eclim#vcs#util#GetRelativePath(expand('%:p'))
-    let revision = eclim#vcs#util#GetRevision(path)
+    let path = exists('b:filename') ? b:filename : expand('%:p')
+    let revision = vcs#util#GetRevision(path)
   endif
 
-  call eclim#vcs#web#VcsWeb('GetChangeSetUrl', revision)
+  call vcs#web#VcsWeb('GetChangeSetUrl', revision)
 endfunction " }}}
 
 " VcsWebAnnotate(revision) {{{
 " View annotated version of the file.
-function eclim#vcs#web#VcsWebAnnotate(revision)
+function vcs#web#VcsWebAnnotate(revision)
   let revision = a:revision
   if revision == ''
-    let path = eclim#vcs#util#GetRelativePath(expand('%:p'))
-    let revision = eclim#vcs#util#GetRevision(path)
+    let path = vcs#util#GetRelativePath(expand('%:p'))
+    let revision = vcs#util#GetRevision(path)
   endif
 
-  call eclim#vcs#web#VcsWeb('GetAnnotateUrl', revision)
+  call vcs#web#VcsWeb('GetAnnotateUrl', revision)
 endfunction " }}}
 
 " VcsWebDiff(revision1, revision2) {{{
 " View diff between two revisions.
-function eclim#vcs#web#VcsWebDiff(...)
+function vcs#web#VcsWebDiff(...)
   let args = a:000
   if len(args) == 1
     let args = split(args[0])
   endif
 
   if len(args) > 2
-    call eclim#util#EchoWarning(":VcsWebDiff accepts at most 2 revision arguments.")
+    call vcs#util#EchoWarning(":VcsWebDiff accepts at most 2 revision arguments.")
     return
   endif
 
-  let path = eclim#vcs#util#GetRelativePath(expand('%:p'))
+  let path = vcs#util#GetRelativePath(expand('%:p'))
   let revision1 = len(args) > 0 ? args[0] : ''
   if revision1 == ''
-    let revision1 = eclim#vcs#util#GetRevision(path)
+    let revision1 = vcs#util#GetRevision(path)
   endif
 
   let revision2 = len(args) > 1 ? args[1] : ''
   if revision2 == ''
     let revision2 = len(args) == 1 ?
-      \ eclim#vcs#util#GetRevision(path) : eclim#vcs#util#GetPreviousRevision(path)
+      \ vcs#util#GetRevision(path) : vcs#util#GetPreviousRevision(path)
     if revision2 == '0'
-      call eclim#util#EchoWarning(
+      call vcs#util#EchoWarning(
         \ "File '" . expand('%') . "' has no previous revision to diff.")
       return
     endif
   endif
 
-  call eclim#vcs#web#VcsWeb('GetDiffUrl', revision1, revision2)
+  call vcs#web#VcsWeb('GetDiffUrl', revision1, revision2)
+endfunction " }}}
+
+" OpenUrl(url) {{{
+" Opens the supplied url in a web browser.
+function! vcs#web#OpenUrl(url)
+  if !exists('s:browser') || s:browser == ''
+    let s:browser = s:DetermineBrowser()
+
+    " slight hack for IE which doesn't like the url to be quoted.
+    if s:browser =~ 'iexplore' && !has('win32unix')
+      let s:browser = substitute(s:browser, '"', '', 'g')
+    endif
+  endif
+
+  if s:browser == '' || a:url == ''
+    return
+  endif
+
+  let url = a:url
+  let url = substitute(url, '\', '/', 'g')
+  let url = escape(url, '&%!')
+  let url = escape(url, '%!')
+  let command = escape(substitute(s:browser, '<url>', url, ''), '#')
+  silent call vcs#util#System(command, 1)
+  redraw!
+
+  if v:shell_error
+    call vcs#util#EchoError("Unable to open browser:\n" . s:browser .
+      \ "\nCheck that the browser executable is in your PATH " .
+      \ "or that you have properly configured g:VcsBrowser")
+  endif
+endfunction " }}}
+
+" s:DetermineBrowser() {{{
+function! s:DetermineBrowser()
+  let browser = ''
+
+  " user specified a browser, we just need to fill in any gaps if necessary.
+  if exists("g:VcsBrowser")
+    let browser = g:VcsBrowser
+    " add "<url>" if necessary
+    if browser !~ '<url>'
+      let browser = substitute(browser,
+        \ '^\([[:alnum:][:blank:]-/\\_.:"]\+\)\(.*\)$',
+        \ '\1 "<url>" \2', '')
+    endif
+
+    if has("win32") || has("win64")
+      " add 'start' to run process in background if necessary.
+      if browser !~ '^[!]\?start'
+        let browser = 'start ' . browser
+      endif
+    else
+      " add '&' to run process in background if necessary.
+      if browser !~ '&\s*$' &&
+       \ browser !~ '^\(/[/a-zA-Z0-9]\+/\)\?\<\(links\|lynx\|elinks\|w3m\)\>'
+        let browser = browser . ' &'
+      endif
+
+      " add redirect of std out and error if necessary.
+      if browser !~ '/dev/null'
+        let browser = substitute(browser, '\s*&\s*$', '&> /dev/null &', '')
+      endif
+    endif
+
+    if browser !~ '^\s*!'
+      let browser = '!' . browser
+    endif
+
+  " user did not specify a browser, so attempt to find a suitable one.
+  else
+    if has('win32') || has('win64') || has('win32unix')
+      " Note: this version may not like .html suffixes on windows 2000
+      if executable('rundll32')
+        let browser = 'rundll32 url.dll,FileProtocolHandler <url>'
+      endif
+      " this doesn't handle local files very well or '&' in the url.
+      "let browser = '!cmd /c start <url>'
+      if browser == ''
+        for name in s:win_browsers
+          if has('win32unix')
+            let name = s:CygPath(name)
+          endif
+          if executable(name)
+            let browser = name
+            if has('win32unix')
+              let browser = '"' . browser . '"'
+            endif
+            break
+          endif
+        endfor
+      endif
+    elseif has('mac')
+      let browser = '!open <url>'
+    else
+      for name in s:browsers
+        if executable(name)
+          let browser = name
+          break
+        endif
+      endfor
+    endif
+
+    if browser != ''
+      let g:VcsBrowser = browser
+      let browser = s:DetermineBrowser()
+    endif
+  endif
+
+  if browser == ''
+    call vcs#util#EchoError("Unable to determine browser.  " .
+      \ "Please set g:VcsBrowser to your preferred browser.")
+  endif
+
+  return browser
 endfunction " }}}
 
 " vim:ft=vim:fdm=marker

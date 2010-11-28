@@ -1,70 +1,83 @@
 " Author:  Eric Van Dewoestine
 "
-" Description: {{{
-"   Functions for working with version control systems.
+" License: {{{
+"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   All rights reserved.
 "
-" License:
+"   Redistribution and use of this software in source and binary forms, with
+"   or without modification, are permitted provided that the following
+"   conditions are met:
 "
-" Copyright (C) 2005 - 2010  Eric Van Dewoestine
+"   * Redistributions of source code must retain the above
+"     copyright notice, this list of conditions and the
+"     following disclaimer.
 "
-" This program is free software: you can redistribute it and/or modify
-" it under the terms of the GNU General Public License as published by
-" the Free Software Foundation, either version 3 of the License, or
-" (at your option) any later version.
+"   * Redistributions in binary form must reproduce the above
+"     copyright notice, this list of conditions and the
+"     following disclaimer in the documentation and/or other
+"     materials provided with the distribution.
 "
-" This program is distributed in the hope that it will be useful,
-" but WITHOUT ANY WARRANTY; without even the implied warranty of
-" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-" GNU General Public License for more details.
+"   * Neither the name of Eric Van Dewoestine nor the names of its
+"     contributors may be used to endorse or promote products derived from
+"     this software without specific prior written permission of
+"     Eric Van Dewoestine.
 "
-" You should have received a copy of the GNU General Public License
-" along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"
+"   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+"   IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+"   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+"   PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+"   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+"   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+"   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+"   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+"   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+"   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+"   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 " }}}
 
-runtime autoload/eclim/vcs/util.vim
+runtime autoload/vcs/util.vim
 
 " Global Variables {{{
-  if !exists('g:EclimVcsLogMaxEntries')
-    let g:EclimVcsLogMaxEntries = 0
+  if !exists('g:VcsLogMaxEntries')
+    let g:VcsLogMaxEntries = 0
   endif
 
-  if !exists('g:EclimVcsDiffOrientation')
-    let g:EclimVcsDiffOrientation = 'vertical'
+  if !exists('g:VcsDiffOrientation')
+    let g:VcsDiffOrientation = 'vertical'
   endif
 
-  if !exists('g:EclimVcsTrackerIdPatterns')
-    let g:EclimVcsTrackerIdPatterns = ['#\(\d\+\)']
+  if !exists('g:VcsTrackerIdPatterns')
+    let g:VcsTrackerIdPatterns = ['#\(\d\+\)']
   endif
 " }}}
 
 " Script Variables {{{
-  let eclim#vcs#command#EclimVcsTrackerIdPatterns = g:EclimVcsTrackerIdPatterns
-  let s:trackerIdPattern = join(eclim#vcs#command#EclimVcsTrackerIdPatterns, '\|')
+  let vcs#command#VcsTrackerIdPatterns = g:VcsTrackerIdPatterns
+  let s:trackerIdPattern = join(vcs#command#VcsTrackerIdPatterns, '\|')
 " }}}
 
 " Annotate([revision]) {{{
-function! eclim#vcs#command#Annotate(...)
+function! vcs#command#Annotate(...)
   if exists('b:vcs_annotations')
     call s:AnnotateOff()
     return
   endif
 
   let path = exists('b:vcs_props') ? b:vcs_props.path :
-    \ eclim#vcs#util#GetRelativePath(expand('%:p'))
+    \ vcs#util#GetRelativePath(expand('%:p'))
   let revision = len(a:000) > 0 ? a:000[0] : ''
 
   " let the vcs annotate the current working version so that the results line
   " up with the contents (assuming the underlying vcs supports it).
   "if revision == ''
-  "  let revision = eclim#vcs#util#GetRevision()
+  "  let revision = vcs#util#GetRevision()
   "endif
 
-  let cwd = eclim#vcs#util#LcdRoot()
+  let cwd = vcs#util#LcdRoot()
   try
-    let Annotate = eclim#vcs#util#GetVcsFunction('GetAnnotations')
+    let Annotate = vcs#util#GetVcsFunction('GetAnnotations')
     if type(Annotate) != 2
-      call eclim#util#EchoError(
+      call vcs#util#EchoError(
         \ 'Current file is not under hg or git version control.')
       return
     endif
@@ -78,46 +91,46 @@ endfunction " }}}
 
 " Diff(revision) {{{
 " Diffs the current file against the current or supplied revision.
-function! eclim#vcs#command#Diff(revision)
+function! vcs#command#Diff(revision)
   let path = expand('%:p')
-  let relpath = eclim#vcs#util#GetRelativePath(expand('%:p'))
+  let relpath = vcs#util#GetRelativePath(expand('%:p'))
   let revision = a:revision
   if revision == ''
-    let revision = eclim#vcs#util#GetRevision(relpath)
+    let revision = vcs#util#GetRevision(relpath)
     if revision == ''
-      call eclim#util#Echo('Unable to determine file revision.')
+      call vcs#util#Echo('Unable to determine file revision.')
       return
     endif
   elseif revision == 'prev'
-    let revision = eclim#vcs#util#GetPreviousRevision(relpath)
+    let revision = vcs#util#GetPreviousRevision(relpath)
   endif
 
   let filename = expand('%:p')
   let buf1 = bufnr('%')
 
-  let orien = g:EclimVcsDiffOrientation == 'horizontal' ? '' : 'vertical'
-  call eclim#vcs#command#ViewFileRevision(path, revision, 'bel ' . orien . ' split')
+  let orien = g:VcsDiffOrientation == 'horizontal' ? '' : 'vertical'
+  call vcs#command#ViewFileRevision(path, revision, 'bel ' . orien . ' split')
   diffthis
 
   let b:filename = filename
   let b:vcs_diff_temp = 1
   augroup vcs_diff
     autocmd! BufWinLeave <buffer>
-    call eclim#util#GoToBufferWindowRegister(b:filename)
+    call vcs#util#GoToBufferWindowRegister(b:filename)
     autocmd BufWinLeave <buffer> diffoff
   augroup END
 
-  call eclim#util#GoToBufferWindow(buf1)
+  call vcs#util#GoToBufferWindow(buf1)
   diffthis
 endfunction " }}}
 
 " Info() {{{
 " Retrieves and echos info on the current file.
-function! eclim#vcs#command#Info()
-  let path = eclim#vcs#util#GetRelativePath(expand('%:p'))
-  let cwd = eclim#vcs#util#LcdRoot()
+function! vcs#command#Info()
+  let path = vcs#util#GetRelativePath(expand('%:p'))
+  let cwd = vcs#util#LcdRoot()
   try
-    let Info = eclim#vcs#util#GetVcsFunction('Info')
+    let Info = vcs#util#GetVcsFunction('Info')
     if type(Info) == 2
       call Info(path)
     endif
@@ -128,22 +141,22 @@ endfunction " }}}
 
 " Log(args) {{{
 " Opens a buffer with the results of running a log for the supplied arguments.
-function! eclim#vcs#command#Log(args)
-  let cwd = eclim#vcs#util#LcdRoot()
+function! vcs#command#Log(args)
+  let cwd = vcs#util#LcdRoot()
   let args = a:args
-  let path = a:args == '' ? eclim#vcs#util#GetRelativePath(expand('%')) : ''
+  let path = a:args == '' ? vcs#util#GetRelativePath(expand('%')) : ''
   try
-    let Log = eclim#vcs#util#GetVcsFunction('Log')
+    let Log = vcs#util#GetVcsFunction('Log')
     if type(Log) != 2
       return
     endif
 
     " handle user supplied % arg
-    let arglist = eclim#util#ParseArgs(args)
+    let arglist = vcs#util#ParseArgs(args)
     let percent_index = index(arglist, '%')
     if percent_index != -1
       call remove(arglist, percent_index)
-      let path = eclim#vcs#util#GetRelativePath(expand('%'))
+      let path = vcs#util#GetRelativePath(expand('%'))
       let args = '"' . join(arglist, '" "') . '" '
     endif
 
@@ -171,10 +184,10 @@ function! eclim#vcs#command#Log(args)
     call add(content, s:LogLine(entry))
   endfor
 
-  if g:EclimVcsLogMaxEntries > 0 && len(info.log) == g:EclimVcsLogMaxEntries
+  if g:VcsLogMaxEntries > 0 && len(info.log) == g:VcsLogMaxEntries
     call add(content, '------------------------------------------')
-    call add(content, 'Note: entries limited to ' . g:EclimVcsLogMaxEntries . '.')
-    call add(content, '      let g:EclimVcsLogMaxEntries = ' . g:EclimVcsLogMaxEntries)
+    call add(content, 'Note: entries limited to ' . g:VcsLogMaxEntries . '.')
+    call add(content, '      let g:VcsLogMaxEntries = ' . g:VcsLogMaxEntries)
   endif
 
   call s:TempWindow(info.props, content)
@@ -197,27 +210,32 @@ function! eclim#vcs#command#Log(args)
 endfunction " }}}
 
 " LogGrep(args, type) {{{
-function! eclim#vcs#command#LogGrep(args, type)
+function! vcs#command#LogGrep(args, type)
   if a:args == ''
-    call eclim#util#EchoError('Pattern required.')
+    call vcs#util#EchoError('Pattern required.')
     return
   endif
 
-  let cwd = eclim#vcs#util#LcdRoot()
+  let cwd = vcs#util#LcdRoot()
   try
-    let LogGrep = eclim#vcs#util#GetVcsFunction('LogGrep')
+    let LogGrep = vcs#util#GetVcsFunction('LogGrep')
     if type(LogGrep) != 2
       return
     endif
 
-    let arglist = eclim#util#ParseArgs(a:args)
-    let pattern = eclim#regex#SimpleVimToPcre(arglist[0])
+    let arglist = vcs#util#ParseArgs(a:args)
+    let pattern = arglist[0]
+    " translate a few vim regex atoms to pcre
+    let pattern = substitute(pattern, '\\[<>]', '\\b', 'g')
+    let pattern = substitute(pattern, '\\{-}', '*?', 'g')
+    " vim sometimes adds a leading 'very nomagic' when using normal *
+    let pattern = substitute(pattern, '^\\V', '', '')
     let arglist = arglist[1:]
 
     " handle user supplied % arg
     let percent_index = index(arglist, '%')
     if percent_index != -1
-      let arglist[percent_index] = eclim#vcs#util#GetRelativePath(expand('%'))
+      let arglist[percent_index] = vcs#util#GetRelativePath(expand('%'))
     endif
     let args = len(arglist) ? '"' . join(arglist, '" "') . '"' : ''
     let info = LogGrep(pattern, args, a:type)
@@ -240,35 +258,34 @@ endfunction " }}}
 
 " ViewFileRevision(path, revision, open_cmd) {{{
 " Open a read only view for the revision of the supplied version file.
-function! eclim#vcs#command#ViewFileRevision(path, revision, open_cmd)
-  let path = eclim#vcs#util#GetRelativePath(a:path)
+function! vcs#command#ViewFileRevision(path, revision, open_cmd)
+  let path = vcs#util#GetRelativePath(a:path)
   let revision = a:revision
   if revision == ''
-    let revision = eclim#vcs#util#GetRevision(path)
+    let revision = vcs#util#GetRevision(path)
     if revision == ''
-      call eclim#util#Echo('Unable to determine file revision.')
+      call vcs#util#Echo('Unable to determine file revision.')
       return
     endif
   elseif revision == 'prev'
-    let revision = eclim#vcs#util#GetPreviousRevision(path)
+    let revision = vcs#util#GetPreviousRevision(path)
   endif
 
   let props = exists('b:vcs_props') ? b:vcs_props : s:GetProps()
 
   if exists('b:filename')
-    let result = eclim#util#GoToBufferWindow(b:filename)
+    let result = vcs#util#GoToBufferWindow(b:filename)
     if !result && exists('b:winnr')
       exec b:winnr . 'winc w'
     endif
   endif
   let vcs_file = 'vcs_' . revision . '_' . fnamemodify(path, ':t')
 
-  let cwd = eclim#vcs#util#LcdRoot()
+  let cwd = vcs#util#LcdRoot()
   let orig_buf = bufnr('%')
-  let g:EclimTemplateTempIgnore = 1
   try
     " load in content
-    let ViewFileRevision = eclim#vcs#util#GetVcsFunction('ViewFileRevision')
+    let ViewFileRevision = vcs#util#GetVcsFunction('ViewFileRevision')
     if type(ViewFileRevision) != 2
       return
     endif
@@ -276,19 +293,17 @@ function! eclim#vcs#command#ViewFileRevision(path, revision, open_cmd)
   finally
     " switch back to the original cwd for both the original + new buffer.
     let cur_buf = bufnr('%')
-    call eclim#util#GoToBufferWindow(orig_buf)
+    call vcs#util#GoToBufferWindow(orig_buf)
     exec 'lcd ' . cwd
-    call eclim#util#GoToBufferWindow(cur_buf)
+    call vcs#util#GoToBufferWindow(cur_buf)
     exec 'lcd ' . cwd
-
-    unlet g:EclimTemplateTempIgnore
   endtry
 
   let open_cmd = a:open_cmd != '' ? a:open_cmd : 'split'
   if has('win32') || has('win64')
     let vcs_file = substitute(vcs_file, ':', '_', 'g')
   endif
-  call eclim#util#GoToBufferWindowOrOpen(vcs_file, open_cmd)
+  call vcs#util#GoToBufferWindowOrOpen(vcs_file, open_cmd)
 
   setlocal noreadonly
   setlocal modifiable
@@ -312,7 +327,7 @@ endfunction " }}}
 function! s:ApplyAnnotations(annotations)
   let existing = {}
   let existing_annotations = {}
-  for exists in eclim#display#signs#GetExisting()
+  for exists in vcs#util#GetExistingSigns()
     if exists.name !~ '^\(vcs_annotate_\|placeholder\)'
       let existing[exists.line] = exists
     else
@@ -320,12 +335,12 @@ function! s:ApplyAnnotations(annotations)
     endif
   endfor
 
-  let defined = eclim#display#signs#GetDefined()
+  let defined = vcs#util#GetDefinedSigns()
   let index = 1
   for annotation in a:annotations
     if annotation == 'uncommitted'
       if has_key(existing_annotations, index)
-        call eclim#display#signs#Unplace(existing_annotations[index].id)
+        call vcs#util#UnplaceSign(existing_annotations[index].id)
       endif
       let index += 1
       continue
@@ -346,10 +361,10 @@ function! s:ApplyAnnotations(annotations)
     endif
     let sign_name = 'vcs_annotate_' . substitute(user[:5], ' ', '_', 'g')
     if index(defined, sign_name) == -1
-      call eclim#display#signs#Define(sign_name, user_abbrv, g:EclimInfoHighlight)
+      call vcs#util#DefineSign(sign_name, user_abbrv)
       call add(defined, sign_name)
     endif
-    call eclim#display#signs#Place(sign_name, index)
+    call vcs#util#PlaceSign(sign_name, index)
     let index += 1
   endfor
 
@@ -364,12 +379,10 @@ function! s:ApplyAnnotations(annotations)
     autocmd!
     autocmd CursorMoved <buffer> call <SID>AnnotateInfo()
     autocmd BufWritePost <buffer>
-      \ if !eclim#util#WillWrittenBufferClose() |
-      \   if exists('b:vcs_annotations') |
-      \     unlet b:vcs_annotations |
-      \   endif |
-      \   call eclim#vcs#command#Annotate() |
-      \ endif
+      \ if exists('b:vcs_annotations') |
+      \   unlet b:vcs_annotations |
+      \ endif |
+      \ call vcs#command#Annotate() |
   augroup END
 endfunction " }}}
 
@@ -380,23 +393,23 @@ function! s:AnnotateInfo()
   endif
 
   if exists('b:vcs_annotations') && len(b:vcs_annotations) >= line('.')
-    call eclim#util#WideMessage('echo', b:vcs_annotations[line('.') - 1])
+    call vcs#util#WideMessage('echo', b:vcs_annotations[line('.') - 1])
   endif
 endfunction " }}}
 
 " s:AnnotateOff() {{{
 function! s:AnnotateOff()
   if exists('b:vcs_annotations')
-    let defined = eclim#display#signs#GetDefined()
+    let defined = vcs#util#GetDefinedSigns()
     for annotation in b:vcs_annotations
       let user = substitute(annotation, '^.\{-})\s\+\(.\{-}\)\s*$', '\1', '')
       let sign_name = 'vcs_annotate_' . substitute(user[:5], ' ', '_', 'g')
       if index(defined, sign_name) != -1
-        let signs = eclim#display#signs#GetExisting(sign_name)
+        let signs = vcs#util#GetExistingSigns(sign_name)
         for sign in signs
-          call eclim#display#signs#Unplace(sign.id)
+          call vcs#util#UnplaceSign(sign.id)
         endfor
-        call eclim#display#signs#Undefine(sign_name)
+        call vcs#util#UndefineSign(sign_name)
         call remove(defined, index(defined, sign_name))
       endif
     endfor
@@ -415,7 +428,7 @@ endfunction " }}}
 function! s:AnnotateCat()
   if exists('b:vcs_annotations') && len(b:vcs_annotations) >= line('.')
     let revision = split(b:vcs_annotations[line('.') - 1])[0]
-    call eclim#vcs#command#ViewFileRevision(b:vcs_props.path, revision, '')
+    call vcs#command#ViewFileRevision(b:vcs_props.path, revision, '')
   endif
 endfunction " }}}
 
@@ -423,7 +436,7 @@ endfunction " }}}
 function! s:AnnotateDiff()
   if exists('b:vcs_annotations') && len(b:vcs_annotations) >= line('.')
     let revision = split(b:vcs_annotations[line('.') - 1])[0]
-    call eclim#vcs#command#Diff(revision)
+    call vcs#command#Diff(revision)
   endif
 endfunction " }}}
 
@@ -453,79 +466,73 @@ function! s:Action()
       let file = s:GetFilePath()
       let revision = s:GetRevision()
 
-      call eclim#vcs#command#ViewFileRevision(file, revision, '')
+      call vcs#command#ViewFileRevision(file, revision, '')
       if link == 'annotate'
-        call eclim#vcs#command#Annotate(revision)
+        call vcs#command#Annotate(revision)
       endif
 
     " link to diff one version against previous
     elseif link =~ '^diff '
       let file = s:GetFilePath()
       let revision = s:GetRevision()
-      let orien = g:EclimVcsDiffOrientation == 'horizontal' ? '' : 'vertical'
+      let orien = g:VcsDiffOrientation == 'horizontal' ? '' : 'vertical'
 
       if link =~ 'previous'
         let previous = s:GetPreviousRevision()
         if previous != ''
-          call eclim#vcs#command#ViewFileRevision(file, revision, '')
+          call vcs#command#ViewFileRevision(file, revision, '')
           let buf1 = bufnr('%')
-          call eclim#vcs#command#ViewFileRevision(file, previous, 'bel ' . orien . ' split')
+          call vcs#command#ViewFileRevision(file, previous, 'bel ' . orien . ' split')
           diffthis
-          call eclim#util#GoToBufferWindow(buf1)
+          call vcs#util#GoToBufferWindow(buf1)
           diffthis
         endif
       else
         let filename = b:filename
-        call eclim#vcs#command#ViewFileRevision(file, revision, 'bel ' . orien . ' split')
+        call vcs#command#ViewFileRevision(file, revision, 'bel ' . orien . ' split')
         diffthis
 
         let b:filename = filename
         augroup vcs_diff
           autocmd! BufWinLeave <buffer>
-          call eclim#util#GoToBufferWindowRegister(b:filename)
+          call vcs#util#GoToBufferWindowRegister(b:filename)
           autocmd BufWinLeave <buffer> diffoff
         augroup END
 
-        call eclim#util#GoToBufferWindow(filename)
+        call vcs#util#GoToBufferWindow(filename)
         diffthis
       endif
 
     " link to bug / feature report
     elseif link =~ '^' . s:trackerIdPattern . '$'
-      let cwd = getcwd()
-      let dir = fnamemodify(b:filename, ':h')
-      exec 'lcd ' . escape(dir, ' ')
-      try
-        let url = eclim#project#util#GetProjectSetting('org.eclim.project.tracker')
-      finally
-        exec 'lcd ' . escape(cwd, ' ')
-      endtry
+      let settings = vcs#util#GetSettings()
+      let url = get(settings, 'tracker_url', '')
 
       if type(url) == 0
         return
       endif
 
       if url == ''
-        call eclim#util#EchoWarning(
-          \ "Link to bug report / feature request requires project setting " .
-          \ "'org.eclim.project.tracker'.")
+        call vcs#util#EchoWarning(
+          \ "Links to ticketing systems requires the 'tracker_url' setting\n" .
+          \ "for your repository to be set in g:VcsRepositorySettings.")
         return
       endif
 
-      for pattern in g:EclimVcsTrackerIdPatterns
+      for pattern in g:VcsTrackerIdPatterns
         if link =~ pattern
           let id = substitute(link, pattern, '\1', '')
           break
         endif
       endfor
       let url = substitute(url, '<id>', id, 'g')
-      call eclim#web#OpenUrl(url)
+      call vcs#web#OpenUrl(url)
 
     " added file
     elseif link == 'A'
       let file = substitute(line, '.*|A|\s*', '', '')
       let revision = s:GetRevision()
-      call eclim#vcs#command#ViewFileRevision(file, revision, '')
+      call vcs#command#ViewFileRevision(file, revision, '')
 
     " modified or renamed file
     elseif link == 'M' || link == 'R'
@@ -533,30 +540,30 @@ function! s:Action()
       if link == 'M'
         let file = substitute(line, '.*|M|\s*', '', '')
         let old = file
-        let previous = eclim#vcs#util#GetPreviousRevision(file, revision)
+        let previous = vcs#util#GetPreviousRevision(file, revision)
       else
         let file = substitute(line, '.*|R|.*->\s*', '', '')
         let old = substitute(line, '.*|R|\s*\(.*\)\s->.*', '\1', '')
-        let previous = eclim#vcs#util#GetPreviousRevision(old)
+        let previous = vcs#util#GetPreviousRevision(old)
       endif
-      call eclim#vcs#command#ViewFileRevision(file, revision, '')
+      call vcs#command#ViewFileRevision(file, revision, '')
       let buf1 = bufnr('%')
-      let orien = g:EclimVcsDiffOrientation == 'horizontal' ? '' : 'vertical'
-      call eclim#vcs#command#ViewFileRevision(old, previous, 'bel ' . orien . ' split')
+      let orien = g:VcsDiffOrientation == 'horizontal' ? '' : 'vertical'
+      call vcs#command#ViewFileRevision(old, previous, 'bel ' . orien . ' split')
       diffthis
-      call eclim#util#GoToBufferWindow(buf1)
+      call vcs#util#GoToBufferWindow(buf1)
       diffthis
 
     " deleted file
     elseif link == 'D'
       let file = substitute(line, '.*|D|\s*', '', '')
       let revision = s:GetRevision()
-      let previous = eclim#vcs#util#GetPreviousRevision(file, revision)
-      call eclim#vcs#command#ViewFileRevision(file, previous, '')
+      let previous = vcs#util#GetPreviousRevision(file, revision)
+      call vcs#command#ViewFileRevision(file, previous, '')
 
     endif
   catch /vcs error/
-    " the error message is printed by eclim#vcs#util#Vcs
+    " the error message is printed by vcs#util#Vcs
   endtry
 endfunction " }}}
 
@@ -604,7 +611,7 @@ function! s:ToggleDetail()
     if end == -1
       let end = line('$')
     endif
-    exec lnum + 1 . ',' . end . 'delete _'
+    silent exec lnum + 1 . ',' . end . 'delete _'
     call setpos('.', pos)
   endif
   setlocal nomodifiable readonly
@@ -644,7 +651,7 @@ function! s:ToggleFiles()
       if end < start
         let end = start
       endif
-      exec start . ',' . end . 'delete _'
+      silent exec start . ',' . end . 'delete _'
       call setpos('.', pos)
     endif
   endif
@@ -654,8 +661,8 @@ endfunction " }}}
 " s:GetProps() {{{
 function! s:GetProps()
   return {
-      \ 'root_dir': eclim#vcs#util#GetRoot(),
-      \ 'path': eclim#vcs#util#GetRelativePath(expand('%:p')),
+      \ 'root_dir': vcs#util#GetRoot(),
+      \ 'path': vcs#util#GetRelativePath(expand('%:p')),
     \ }
 endfunction " }}}
 
@@ -674,7 +681,7 @@ endfunction " }}}
 function! s:GetPreviousRevision()
   let lnum = search('^[+-] \w\+', 'nW')
   if lnum == 0
-    call eclim#util#EchoWarning('Could not find the previous revision number')
+    call vcs#util#EchoWarning('Could not find the previous revision number')
     return ''
   endif
   return substitute(getline(lnum), '[+-] \(\w\+\) .*', '\1', '')
@@ -682,7 +689,7 @@ endfunction " }}}
 
 " s:LogDetail(revision) {{{
 function! s:LogDetail(revision)
-  let LogDetail = eclim#vcs#util#GetVcsFunction('LogDetail')
+  let LogDetail = vcs#util#GetVcsFunction('LogDetail')
   if type(LogDetail) != 2
     return
   endif
@@ -691,7 +698,7 @@ endfunction " }}}
 
 " s:LogFiles(revision) {{{
 function! s:LogFiles(revision)
-  let LogFiles = eclim#vcs#util#GetVcsFunction('LogFiles')
+  let LogFiles = vcs#util#GetVcsFunction('LogFiles')
   if type(LogFiles) != 2
     return
   endif
@@ -715,8 +722,7 @@ function! s:LogSyntax()
   syntax match VcsRefs /\(^[+-] \w\+ \)\@<=(.\{-})/
   syntax match VcsDate /\(^[+-] \w\+ \((.\{-}) \)\?\w.\{-}\)\@<=(\d.\{-})/
   syntax match VcsLink /|\S.\{-}|/
-  let indent = eclim#util#GetIndent(1)
-  exec 'syntax match VcsFiles /\(^' . indent . '[+-] \)\@<=files$/'
+  exec 'syntax match VcsFiles /\(^\s\+[+-] \)\@<=files$/'
 endfunction " }}}
 
 " s:TempWindow(props, lines) {{{
@@ -728,16 +734,38 @@ function! s:TempWindow(props, lines)
     let winnr = b:winnr
   endif
 
-  call eclim#util#TempWindow('[vcs_log]', a:lines)
+  let name = vcs#util#EscapeBufferName('[vcs_log]')
+  if bufwinnr(name) == -1
+    silent! noautocmd exec "botright 10sview " . escape('[vcs_log]', ' ')
+    setlocal nowrap
+    setlocal winfixheight
+    setlocal noswapfile nobuflisted
+    setlocal buftype=nofile
+    setlocal bufhidden=delete
+    setlocal modifiable noreadonly
+    silent doautocmd WinEnter
+  else
+    exec bufwinnr(name) . "winc w"
+    setlocal modifiable noreadonly
+    silent 1,$delete _
+    silent doautocmd WinEnter
+  endif
+
+  call append(1, a:lines)
+  retab
+  silent 1,1delete _
+
+  setlocal nomodified nomodifiable readonly
+  silent doautocmd BufEnter
 
   let b:filename = filename
   let b:winnr = winnr
   let b:vcs_props = a:props
   exec 'lcd ' . escape(a:props.root_dir, ' ')
 
-  augroup eclim_temp_window
+  augroup vcs_temp_window
     autocmd! BufWinLeave <buffer>
-    call eclim#util#GoToBufferWindowRegister(b:filename)
+    call vcs#util#GoToBufferWindowRegister(b:filename)
   augroup END
 endfunction " }}}
 

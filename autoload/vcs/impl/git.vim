@@ -1,29 +1,42 @@
 " Author:  Eric Van Dewoestine
 "
-" Description: {{{
-"   see http://eclim.org/vim/common/vcs.html
+" License: {{{
+"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   All rights reserved.
 "
-" License:
+"   Redistribution and use of this software in source and binary forms, with
+"   or without modification, are permitted provided that the following
+"   conditions are met:
 "
-" Copyright (C) 2005 - 2010  Eric Van Dewoestine
+"   * Redistributions of source code must retain the above
+"     copyright notice, this list of conditions and the
+"     following disclaimer.
 "
-" This program is free software: you can redistribute it and/or modify
-" it under the terms of the GNU General Public License as published by
-" the Free Software Foundation, either version 3 of the License, or
-" (at your option) any later version.
+"   * Redistributions in binary form must reproduce the above
+"     copyright notice, this list of conditions and the
+"     following disclaimer in the documentation and/or other
+"     materials provided with the distribution.
 "
-" This program is distributed in the hope that it will be useful,
-" but WITHOUT ANY WARRANTY; without even the implied warranty of
-" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-" GNU General Public License for more details.
+"   * Neither the name of Eric Van Dewoestine nor the names of its
+"     contributors may be used to endorse or promote products derived from
+"     this software without specific prior written permission of
+"     Eric Van Dewoestine.
 "
-" You should have received a copy of the GNU General Public License
-" along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"
+"   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+"   IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+"   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+"   PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+"   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+"   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+"   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+"   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+"   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+"   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+"   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 " }}}
 
-if !exists('g:eclim_vcs_git_loaded')
-  let g:eclim_vcs_git_loaded = 1
+if !exists('g:vcs_git_loaded')
+  let g:vcs_git_loaded = 1
 else
   finish
 endif
@@ -37,17 +50,17 @@ augroup END
 " }}}
 
 " Script Variables {{{
-  let s:trackerIdPattern = join(eclim#vcs#command#EclimVcsTrackerIdPatterns, '\|')
+  let s:trackerIdPattern = join(vcs#command#VcsTrackerIdPatterns, '\|')
 " }}}
 
 " GetAnnotations(path, revision) {{{
-function! eclim#vcs#impl#git#GetAnnotations(path, revision)
+function! vcs#impl#git#GetAnnotations(path, revision)
   let cmd = 'annotate'
   let revision = ''
   if a:revision != ''
     let revision = ' ' . substitute(a:revision, '.*:', '', '')
   endif
-  let result = eclim#vcs#impl#git#Git(cmd . ' "' . a:path . '"' . revision)
+  let result = vcs#impl#git#Git(cmd . ' "' . a:path . '"' . revision)
   if type(result) == 0
     return
   endif
@@ -62,14 +75,14 @@ function! eclim#vcs#impl#git#GetAnnotations(path, revision)
 endfunction " }}}
 
 " GetPreviousRevision(path, [revision]) {{{
-function eclim#vcs#impl#git#GetPreviousRevision(path, ...)
+function vcs#impl#git#GetPreviousRevision(path, ...)
   let revision = 'HEAD'
   if len(a:000)
     let revision = a:000[0]
   endif
 
   let cmd = 'rev-list --abbrev-commit -n 1 --skip=1 ' . revision . ' -- "' . a:path . '"'
-  let prev = eclim#vcs#impl#git#Git(cmd)
+  let prev = vcs#impl#git#Git(cmd)
   if type(prev) == 0
     return
   endif
@@ -77,10 +90,10 @@ function eclim#vcs#impl#git#GetPreviousRevision(path, ...)
 endfunction " }}}
 
 " GetRevision(path) {{{
-function eclim#vcs#impl#git#GetRevision(path)
+function vcs#impl#git#GetRevision(path)
   " for some reason, in some contexts (git commit buffer), the git command
   " will fail if not run from root of the repos.
-  let root = eclim#vcs#impl#git#GetRoot()
+  let root = vcs#impl#git#GetRoot()
   exec 'lcd ' . escape(root, ' ')
 
   let path = a:path
@@ -90,24 +103,35 @@ function eclim#vcs#impl#git#GetRevision(path)
     let path = substitute(path, '\<index_blob_[a-z0-9]\{40}_', '', '')
   endif
 
-  let rev = eclim#vcs#impl#git#Git('rev-list --abbrev-commit -n 1 HEAD -- "' . path . '"')
+  let rev = vcs#impl#git#Git('rev-list --abbrev-commit -n 1 HEAD -- "' . path . '"')
   if type(rev) == 0
     return
   endif
   return substitute(rev, '\n', '', '')
 endfunction " }}}
 
-" GetRevisions(path) {{{
-function eclim#vcs#impl#git#GetRevisions(path)
-  let revs = eclim#vcs#impl#git#Git('rev-list --abbrev-commit HEAD "' . a:path . '"')
-  if type(revs) == 0
-    return
+" GetRevisions() {{{
+function vcs#impl#git#GetRevisions()
+  let revs = []
+
+  let result = vcs#impl#git#Git('tag -l')
+  if type(result) != 0
+    call extend(revs, split(result, '\n'))
   endif
-  return split(revs, '\n')
+
+  let result = vcs#impl#git#Git('branch -r')
+  if type(result) != 0
+    let branches = split(result, '\n')
+    call map(branches, "substitute(v:val, '^.*/\\(.*\\)$', '\\1', '')")
+    call extend(revs, branches)
+  endif
+
+  call sort(revs)
+  return revs
 endfunction " }}}
 
 " GetRoot() {{{
-function eclim#vcs#impl#git#GetRoot()
+function vcs#impl#git#GetRoot()
   let root = finddir('.git', escape(getcwd(), ' ') . ';')
   if root == ''
     return
@@ -118,8 +142,8 @@ function eclim#vcs#impl#git#GetRoot()
 endfunction " }}}
 
 " GetInfo() {{{
-function eclim#vcs#impl#git#GetInfo()
-  let info = eclim#vcs#impl#git#Git('branch')
+function vcs#impl#git#GetInfo()
+  let info = vcs#impl#git#Git('branch')
   if info == '0'
     return ''
   endif
@@ -128,12 +152,12 @@ function eclim#vcs#impl#git#GetInfo()
 endfunction " }}}
 
 " GetEditorFile() {{{
-function eclim#vcs#impl#git#GetEditorFile()
+function vcs#impl#git#GetEditorFile()
   let line = getline('.')
   if line =~ '^#\s*modified:.*'
     let file = substitute(line, '^#\s*modified:\s\+\(.*\)\s*', '\1', '')
     if search('#\s\+Changed but not updated:', 'nw') > line('.')
-      let result = eclim#vcs#impl#git#Git('diff --full-index --cached "' . file . '"')
+      let result = vcs#impl#git#Git('diff --full-index --cached "' . file . '"')
       let lines = split(result, "\n")[:5]
       call filter(lines, 'v:val =~ "^index \\w\\+\\.\\.\\w\\+"')
       if len(lines)
@@ -155,9 +179,9 @@ function eclim#vcs#impl#git#GetEditorFile()
 endfunction " }}}
 
 " GetModifiedFiles() {{{
-function eclim#vcs#impl#git#GetModifiedFiles()
-  let root = eclim#vcs#impl#git#GetRoot()
-  let status = eclim#vcs#impl#git#Git('diff --name-status HEAD')
+function vcs#impl#git#GetModifiedFiles()
+  let root = vcs#impl#git#GetRoot()
+  let status = vcs#impl#git#Git('diff --name-status HEAD')
   let files = []
   for file in split(status, "\n")
     if file !~ '^[AM]\s\+'
@@ -167,26 +191,26 @@ function eclim#vcs#impl#git#GetModifiedFiles()
     call add(files, root . '/' . file)
   endfor
 
-  let untracked = eclim#vcs#impl#git#Git('ls-files --others --exclude-standard')
+  let untracked = vcs#impl#git#Git('ls-files --others --exclude-standard')
   let files += map(split(untracked, "\n"), 'root . "/" . v:val')
 
   return files
 endfunction " }}}
 
 " Info(path) {{{
-function eclim#vcs#impl#git#Info(path)
-  let result = eclim#vcs#impl#git#Git('log -1 "' . a:path . '"')
+function vcs#impl#git#Info(path)
+  let result = vcs#impl#git#Git('log -1 "' . a:path . '"')
   if type(result) == 0
     return
   endif
-  call eclim#util#Echo(result)
+  call vcs#util#Echo(result)
 endfunction " }}}
 
 " Log(args [, exec]) {{{
-function eclim#vcs#impl#git#Log(args, ...)
+function vcs#impl#git#Log(args, ...)
   let logcmd = 'log --pretty=tformat:"%h|%cn|%cr|%d|%s|"'
-  if g:EclimVcsLogMaxEntries > 0
-    let logcmd .= ' -' . g:EclimVcsLogMaxEntries
+  if g:VcsLogMaxEntries > 0
+    let logcmd .= ' -' . g:VcsLogMaxEntries
   endif
   if a:args != ''
     let logcmd .= ' ' . a:args
@@ -196,7 +220,7 @@ function eclim#vcs#impl#git#Log(args, ...)
   if exec
     let logcmd = escape(logcmd, '%')
   endif
-  let result = eclim#vcs#impl#git#Git(logcmd, exec)
+  let result = vcs#impl#git#Git(logcmd, exec)
   if type(result) == 0
     return
   endif
@@ -213,12 +237,12 @@ function eclim#vcs#impl#git#Log(args, ...)
      \ })
   endfor
   let root_dir = exists('b:vcs_props') ?
-    \ b:vcs_props.root_dir : eclim#vcs#impl#git#GetRoot()
+    \ b:vcs_props.root_dir : vcs#impl#git#GetRoot()
   return {'log': log, 'props': {'root_dir': root_dir}}
 endfunction " }}}
 
 " LogGrep(pattern, args, type) {{{
-function eclim#vcs#impl#git#LogGrep(pattern, args, type)
+function vcs#impl#git#LogGrep(pattern, args, type)
   let args = ''
   if a:type == 'message'
     let args .= '-E "--grep=' . a:pattern . '"'
@@ -229,13 +253,13 @@ function eclim#vcs#impl#git#LogGrep(pattern, args, type)
     let args .= ' ' . a:args
   endif
 
-  return eclim#vcs#impl#git#Log(args, 1)
+  return vcs#impl#git#Log(args, 1)
 endfunction " }}}
 
 " LogDetail(revision) {{{
-function eclim#vcs#impl#git#LogDetail(revision)
+function vcs#impl#git#LogDetail(revision)
   let logcmd = 'log -1 --pretty=tformat:"%h|%cn|%cr|%ci|%d|%s|%s%n%n%b|" '
-  let result = eclim#vcs#impl#git#Git(logcmd . a:revision)
+  let result = vcs#impl#git#Git(logcmd . a:revision)
   if type(result) == 0
     return
   endif
@@ -253,9 +277,9 @@ function eclim#vcs#impl#git#LogDetail(revision)
 endfunction " }}}
 
 " LogFiles(revision) {{{
-function eclim#vcs#impl#git#LogFiles(revision)
+function vcs#impl#git#LogFiles(revision)
   let logcmd = 'log -1 --name-status --pretty=tformat:"" '
-  let result = eclim#vcs#impl#git#Git(logcmd . a:revision)
+  let result = vcs#impl#git#Git(logcmd . a:revision)
   if type(result) == 0
     return
   endif
@@ -274,7 +298,7 @@ function eclim#vcs#impl#git#LogFiles(revision)
 endfunction " }}}
 
 " ViewFileRevision(path, revision) {{{
-function! eclim#vcs#impl#git#ViewFileRevision(path, revision)
+function! vcs#impl#git#ViewFileRevision(path, revision)
   let path = a:path
 
   " kind of a hack to support diffs against git's staging (index) area.
@@ -282,19 +306,19 @@ function! eclim#vcs#impl#git#ViewFileRevision(path, revision)
     let path = substitute(path, '\<index_blob_[a-z0-9]\{40}_', '', '')
   endif
 
-  let result = eclim#vcs#impl#git#Git('show "' . a:revision . ':' . path . '"')
+  let result = vcs#impl#git#Git('show "' . a:revision . ':' . path . '"')
   return split(result, '\n')
 endfunction " }}}
 
 " Git(args [, exec]) {{{
 " Executes 'git' with the supplied args.
-function eclim#vcs#impl#git#Git(args, ...)
+function vcs#impl#git#Git(args, ...)
   let exec = len(a:000) > 0 && a:000[0]
-  let result = eclim#vcs#util#Vcs('git', '--no-pager ' . a:args, exec)
+  let result = vcs#util#Vcs('git', '--no-pager ' . a:args, exec)
 
   " handle errors not caught by Vcs
   if type(result) == 1 && result =~ '^fatal:'
-    call eclim#util#EchoError(
+    call vcs#util#EchoError(
       \ "Error executing command: git --no-pager " . a:args . "\n" . result)
     throw 'vcs error'
   endif
@@ -308,13 +332,13 @@ endfunction " }}}
 function! s:ReadIndex()
   setlocal noreadonly modifiable
   if !filereadable(expand('%'))
-    let path = eclim#vcs#util#GetRelativePath(expand('%:p'))
+    let path = vcs#util#GetRelativePath(expand('%:p'))
     let path = substitute(path, '^/', '', '')
-    let root = eclim#vcs#impl#git#GetRoot()
+    let root = vcs#impl#git#GetRoot()
     exec 'lcd ' . escape(root, ' ')
     let index = substitute(path, '.*\<index_blob_\([a-z0-9]\{40}\)_.*', '\1', '')
     let path = substitute(path, '\<index_blob_[a-z0-9]\{40}_', '', '')
-    let result = eclim#vcs#impl#git#Git('show ' . index)
+    let result = vcs#impl#git#Git('show ' . index)
     call append(1, split(result, "\n"))
   else
     read %

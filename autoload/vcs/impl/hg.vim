@@ -1,45 +1,59 @@
 " Author:  Eric Van Dewoestine
 "
-" Description: {{{
-"   see http://eclim.org/vim/common/vcs.html
+" License: {{{
+"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   All rights reserved.
 "
-" License:
+"   Redistribution and use of this software in source and binary forms, with
+"   or without modification, are permitted provided that the following
+"   conditions are met:
 "
-" Copyright (C) 2005 - 2010  Eric Van Dewoestine
+"   * Redistributions of source code must retain the above
+"     copyright notice, this list of conditions and the
+"     following disclaimer.
 "
-" This program is free software: you can redistribute it and/or modify
-" it under the terms of the GNU General Public License as published by
-" the Free Software Foundation, either version 3 of the License, or
-" (at your option) any later version.
+"   * Redistributions in binary form must reproduce the above
+"     copyright notice, this list of conditions and the
+"     following disclaimer in the documentation and/or other
+"     materials provided with the distribution.
 "
-" This program is distributed in the hope that it will be useful,
-" but WITHOUT ANY WARRANTY; without even the implied warranty of
-" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-" GNU General Public License for more details.
+"   * Neither the name of Eric Van Dewoestine nor the names of its
+"     contributors may be used to endorse or promote products derived from
+"     this software without specific prior written permission of
+"     Eric Van Dewoestine.
 "
-" You should have received a copy of the GNU General Public License
-" along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"
+"   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+"   IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+"   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+"   PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+"   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+"   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+"   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+"   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+"   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+"   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+"   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 " }}}
 
-if !exists('g:eclim_vcs_hg_loaded')
-  let g:eclim_vcs_hg_loaded = 1
+if !exists('g:vcs_hg_loaded')
+  let g:vcs_hg_loaded = 1
 else
   finish
 endif
 
 " Script Variables {{{
-  let s:trackerIdPattern = join(eclim#vcs#command#EclimVcsTrackerIdPatterns, '\|')
+  let s:trackerIdPattern = join(vcs#command#VcsTrackerIdPatterns, '\|')
+  let s:path = substitute(expand('<sfile>:h'), '\', '', 'g')
 " }}}
 
 " GetAnnotations(path, revision) {{{
-function! eclim#vcs#impl#hg#GetAnnotations(path, revision)
+function! vcs#impl#hg#GetAnnotations(path, revision)
   let cmd = 'annotate -udc'
   if a:revision != ''
     let revision = substitute(a:revision, '.*:', '', '')
     let cmd .= ' -r ' . revision
   endif
-  let result = eclim#vcs#impl#hg#Hg(cmd . ' "' . a:path . '"')
+  let result = vcs#impl#hg#Hg(cmd . ' "' . a:path . '"')
   if type(result) == 0
     return
   endif
@@ -52,12 +66,12 @@ function! eclim#vcs#impl#hg#GetAnnotations(path, revision)
 endfunction " }}}
 
 " GetPreviousRevision(path, [revision]) {{{
-function eclim#vcs#impl#hg#GetPreviousRevision(path, ...)
+function vcs#impl#hg#GetPreviousRevision(path, ...)
   let cmd = 'log -q --template "{node|short}\n"'
   if len(a:000) > 0 && a:000[0] != ''
     let cmd .= ' -r' . a:000[0] . ':1'
   endif
-  let log = eclim#vcs#impl#hg#Hg(cmd . ' --limit 2 "' . a:path . '"')
+  let log = vcs#impl#hg#Hg(cmd . ' --limit 2 "' . a:path . '"')
   if type(log) == 0
     return
   endif
@@ -66,26 +80,39 @@ function eclim#vcs#impl#hg#GetPreviousRevision(path, ...)
 endfunction " }}}
 
 " GetRevision(path) {{{
-function eclim#vcs#impl#hg#GetRevision(path)
-  let log = eclim#vcs#impl#hg#Hg('log -q --template "{node|short}\n" --limit 1 "' . a:path . '"')
+function vcs#impl#hg#GetRevision(path)
+  let log = vcs#impl#hg#Hg('log -q --template "{node|short}\n" --limit 1 "' . a:path . '"')
   if type(log) == 0
     return
   endif
   return substitute(log, '\n', '', '')
 endfunction " }}}
 
-" GetRevisions(path) {{{
-function eclim#vcs#impl#hg#GetRevisions(path)
-  let log = eclim#vcs#impl#hg#Hg('log -q --template "{node|short}\n" "' . a:path . '"')
-  if type(log) == 0
-    return
+" GetRevisions() {{{
+function vcs#impl#hg#GetRevisions()
+  let revs = []
+
+  let result = vcs#impl#hg#Hg('tags')
+  if type(result) != 0
+    let tags = split(result, '\n')
+    call map(tags, "substitute(v:val, '^\\(.\\{-}\\)\\s.*$', '\\1', '')")
+    call extend(revs, tags)
   endif
-  return split(log, '\n')
+
+  let result = vcs#impl#hg#Hg('branches')
+  if type(result) != 0
+    let branches = split(result, '\n')
+    call map(branches, "substitute(v:val, '^\\(.\\{-}\\)\\s.*$', '\\1', '')")
+    call extend(revs, branches)
+  endif
+
+  call sort(revs)
+  return revs
 endfunction " }}}
 
 " GetRoot() {{{
-function eclim#vcs#impl#hg#GetRoot()
-  let root = eclim#vcs#impl#hg#Hg('root')
+function vcs#impl#hg#GetRoot()
+  let root = vcs#impl#hg#Hg('root')
   if type(root) == 0
     return
   endif
@@ -95,13 +122,13 @@ function eclim#vcs#impl#hg#GetRoot()
 endfunction " }}}
 
 " GetInfo() {{{
-function eclim#vcs#impl#hg#GetInfo()
-  let branch = substitute(eclim#vcs#impl#hg#Hg('branch'), '\n$', '', '')
+function vcs#impl#hg#GetInfo()
+  let branch = substitute(vcs#impl#hg#Hg('branch'), '\n$', '', '')
   if branch == '0'
     return ''
   endif
 
-  let bmarks = split(eclim#vcs#impl#hg#Hg('bookmarks'), '\n')
+  let bmarks = split(vcs#impl#hg#Hg('bookmarks'), '\n')
   let bmarks = filter(bmarks, 'v:val =~ "^\\s*\\*"')
   let bmark = len(bmarks) == 1 ?
     \ substitute(bmarks[0], '^\s*\*\s*\(\w\+\)\s.*', '\1', '') : ''
@@ -110,7 +137,7 @@ function eclim#vcs#impl#hg#GetInfo()
 endfunction " }}}
 
 " GetEditorFile() {{{
-function eclim#vcs#impl#hg#GetEditorFile()
+function vcs#impl#hg#GetEditorFile()
   let line = getline('.')
   let file = ''
   if line =~ '^HG: changed .*'
@@ -122,35 +149,35 @@ function eclim#vcs#impl#hg#GetEditorFile()
 endfunction " }}}
 
 " GetModifiedFiles() {{{
-function eclim#vcs#impl#hg#GetModifiedFiles()
-  let status = eclim#vcs#impl#hg#Hg('status -m -a -u -n')
-  let root = eclim#vcs#impl#hg#GetRoot()
+function vcs#impl#hg#GetModifiedFiles()
+  let status = vcs#impl#hg#Hg('status -m -a -u -n')
+  let root = vcs#impl#hg#GetRoot()
   return map(split(status, "\n"), 'root . "/" . v:val')
 endfunction " }}}
 
 " Info(path) {{{
-function eclim#vcs#impl#hg#Info(path)
-  let result = eclim#vcs#impl#hg#Hg('log --limit 1 "' . a:path . '"')
+function vcs#impl#hg#Info(path)
+  let result = vcs#impl#hg#Hg('log --limit 1 "' . a:path . '"')
   if type(result) == 0
     return
   endif
-  call eclim#util#Echo(result)
+  call vcs#util#Echo(result)
 endfunction " }}}
 
 " Log(args [, exec]) {{{
-function eclim#vcs#impl#hg#Log(args, ...)
+function vcs#impl#hg#Log(args, ...)
   " Note: tags are space separated, so if the user has a space in their tag
   " name, that tag will be screwed in the log.
   let logcmd = 'log  --template "{node|short}|{author}|{date|age}|{tags}|{desc|firstline}\n"'
-  if g:EclimVcsLogMaxEntries > 0
-    let logcmd .= ' --limit ' . g:EclimVcsLogMaxEntries
+  if g:VcsLogMaxEntries > 0
+    let logcmd .= ' --limit ' . g:VcsLogMaxEntries
   endif
   if a:args != ''
     let logcmd .= ' ' . a:args
   endif
 
   let exec = len(a:000) > 0 ? a:000[0] : 0
-  let result = eclim#vcs#impl#hg#Hg(logcmd, exec)
+  let result = vcs#impl#hg#Hg(logcmd, exec)
   if type(result) == 0
     return
   endif
@@ -166,14 +193,14 @@ function eclim#vcs#impl#hg#Log(args, ...)
      \ })
   endfor
   let root_dir = exists('b:vcs_props') ?
-    \ b:vcs_props.root_dir : eclim#vcs#impl#hg#GetRoot()
+    \ b:vcs_props.root_dir : vcs#impl#hg#GetRoot()
   return {'log': log, 'props': {'root_dir': root_dir}}
 endfunction " }}}
 
 " LogGrep(pattern, args, type) {{{
-function eclim#vcs#impl#hg#LogGrep(pattern, args, type)
+function vcs#impl#hg#LogGrep(pattern, args, type)
   if a:type == 'files'
-    let result = eclim#vcs#impl#hg#Hg('grep --all "' . a:pattern . '" ' . a:args, 1)
+    let result = vcs#impl#hg#Hg('grep --all "' . a:pattern . '" ' . a:args, 1)
     if type(result) == 0
       return
     endif
@@ -186,21 +213,20 @@ function eclim#vcs#impl#hg#LogGrep(pattern, args, type)
     endfor
     if len(revisions) == 0
       let root_dir = exists('b:vcs_props') ?
-        \ b:vcs_props.root_dir : eclim#vcs#impl#hg#GetRoot()
+        \ b:vcs_props.root_dir : vcs#impl#hg#GetRoot()
       return {'log': [], 'props': {'root_dir': root_dir}}
     endif
-    return eclim#vcs#impl#hg#Log('-r ' . join(revisions, ' -r ') . ' ' . a:args)
+    return vcs#impl#hg#Log('-r ' . join(revisions, ' -r ') . ' ' . a:args)
   endif
 
-  return eclim#vcs#impl#hg#Log('-k "' . a:pattern . '" ' . a:args, 1)
+  return vcs#impl#hg#Log('-k "' . a:pattern . '" ' . a:args, 1)
 endfunction " }}}
 
 " LogDetail(revision) {{{
-function eclim#vcs#impl#hg#LogDetail(revision)
-  let basedir = EclimBaseDir()
+function vcs#impl#hg#LogDetail(revision)
   let logcmd = 'log "--template=' .
     \ '{node|short}|{author}|{date|age}|{date|isodate}|{tags}|{desc|firstline}|{desc}"'
-  let result = eclim#vcs#impl#hg#Hg(logcmd . ' -r ' . a:revision)
+  let result = vcs#impl#hg#Hg(logcmd . ' -r ' . a:revision)
   if type(result) == 0
     return
   endif
@@ -217,11 +243,9 @@ function eclim#vcs#impl#hg#LogDetail(revision)
 endfunction " }}}
 
 " LogFiles(revision) {{{
-function eclim#vcs#impl#hg#LogFiles(revision)
-  let basedir = substitute(EclimBaseDir(), '\', '', 'g')
-  let logcmd = 'log --copies "--style=' . basedir .
-    \ '/eclim/autoload/eclim/vcs/impl/hg_log_files.style" '
-  let result = eclim#vcs#impl#hg#Hg(logcmd . '-r ' . a:revision)
+function vcs#impl#hg#LogFiles(revision)
+  let logcmd = 'log --copies "--style=' . s:path .  '/hg_log_files.style" '
+  let result = vcs#impl#hg#Hg(logcmd . '-r ' . a:revision)
   if type(result) == 0
     return
   endif
@@ -251,17 +275,17 @@ function eclim#vcs#impl#hg#LogFiles(revision)
 endfunction " }}}
 
 " ViewFileRevision(path, revision) {{{
-function! eclim#vcs#impl#hg#ViewFileRevision(path, revision)
+function! vcs#impl#hg#ViewFileRevision(path, revision)
   let revision = substitute(a:revision, '.\{-}:', '', '')
-  let result = eclim#vcs#impl#hg#Hg('cat -r ' . revision . ' "' . a:path . '"')
+  let result = vcs#impl#hg#Hg('cat -r ' . revision . ' "' . a:path . '"')
   return split(result, '\n')
 endfunction " }}}
 
 " Hg(args [, exec]) {{{
 " Executes 'hg' with the supplied args.
-function eclim#vcs#impl#hg#Hg(args, ...)
+function vcs#impl#hg#Hg(args, ...)
   let exec = len(a:000) > 0 && a:000[0]
-  return eclim#vcs#util#Vcs('hg', a:args, exec)
+  return vcs#util#Vcs('hg', a:args, exec)
 endfunction " }}}
 
 " vim:ft=vim:fdm=marker
