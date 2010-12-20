@@ -617,7 +617,7 @@ function! vcs#util#System(cmd, ...)
   let saveshelltemp = &shelltemp
   let saveshellxquote = &shellxquote
 
-  if has("win32") || has("win64")
+  if has('win32') || has('win64')
     set shell=cmd.exe shellcmdflag=/c
     set shellpipe=>%s\ 2>&1 shellredir=>%s\ 2>&1
     set shellquote= shellxquote=
@@ -634,21 +634,19 @@ function! vcs#util#System(cmd, ...)
     set shelltemp noshellslash
   endif
 
-  " using exec
+  " use exec
   if len(a:000) > 0 && a:000[0]
     let cmd = a:cmd
-    let exec_output = len(a:000) > 1 && a:000[1]
+    let exec_output = len(a:000) > 1 ? a:000[1] : 0
     if exec_output
       let outfile = s:temp_dir . '/vcs_exec_output.txt'
       if has('win32') || has('win64') || has('win32unix')
+        let cmd = substitute(cmd, '^"\(.*\)"$', '\1', '')
         if executable('tee')
-          if has('win32unix')
-            let cmd .= ' ^| tee "' . s:CygPath(outfile) . '" 2>&1"'
-          else
-            let cmd .= ' ^| tee "' . outfile . '" 2>&1"'
-          endif
+          let teefile = has('win32unix') ? s:CygPath(outfile) : outfile
+          let cmd = '!cmd /c "' . cmd . ' 2>&1 | tee "' . teefile . '" "'
         else
-          let cmd .= ' >"' . outfile . '" 2>&1"'
+          let cmd = '!cmd /c "' . cmd . ' >"' . outfile . '" 2>&1 "'
         endif
       else
         let cmd .= ' 2>&1| tee "' . outfile . '"'
@@ -663,7 +661,7 @@ function! vcs#util#System(cmd, ...)
       call delete(outfile)
     endif
 
-  " using system
+  " use system
   else
     let result = system(a:cmd)
   endif
