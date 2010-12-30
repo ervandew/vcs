@@ -26,6 +26,8 @@
 function! SetUp()
   let s:test_dir = 'build/test/temp/git/unittest/test'
   exec 'cd ' . s:test_dir
+  set expandtab
+  set shiftwidth=2 tabstop=2
 endfunction " }}}
 
 " TestInfo() {{{
@@ -193,6 +195,57 @@ function! TestLog()
   call vunit#AssertEquals(line('$'), 2)
 endfunction " }}}
 
+" TestLogFiles() {{{
+function! TestLogFiles()
+  view file2.txt
+  call vunit#PeekRedir()
+  VcsLog
+  call vunit#AssertEquals(expand('%'), '[vcs_log]')
+  call vunit#AssertEquals(getline(1), 'test/file2.txt')
+  call vunit#AssertEquals(line('$'), 5)
+  call cursor(3, 1)
+  exec "normal \<cr>"
+  call vunit#AssertEquals(getline(7), '  + files')
+  call cursor(7, 1)
+  exec "normal \<cr>"
+
+  call vunit#AssertEquals(getline( 7), '  - files')
+  call vunit#AssertEquals(getline( 8), '    |M| test/file2.txt')
+  call vunit#AssertEquals(getline( 9), '    |A| test/file3.txt')
+  call vunit#AssertEquals(getline(10), '    |R| test/file4.txt -> test/file5.txt')
+
+  " modified file
+  call cursor(8, 6)
+  exec "normal \<cr>"
+  call vunit#AssertEquals(expand('%'), 'vcs_ee5a562_file2.txt')
+  call vunit#AssertEquals(line('$'), 4)
+  winc l
+  call vunit#AssertEquals(expand('%'), 'vcs_101e4be_file2.txt')
+  call vunit#AssertEquals(line('$'), 3)
+  bdelete
+  bdelete
+  winc j
+
+  " new file
+  call cursor(9, 6)
+  exec "normal \<cr>"
+  call vunit#AssertEquals(expand('%'), 'vcs_ee5a562_file3.txt')
+  call vunit#AssertEquals(line('$'), 4)
+  bdelete
+  winc j
+
+  " moved file
+  call cursor(10, 6)
+  exec "normal \<cr>"
+  call vunit#AssertEquals(expand('%'), 'vcs_ee5a562_file5.txt')
+  call vunit#AssertEquals(line('$'), 1)
+  winc l
+  call vunit#AssertEquals(expand('%'), 'vcs_35a1f6a_file4.txt')
+  call vunit#AssertEquals(line('$'), 1)
+  bdelete
+  bdelete
+endfunction " }}}
+
 " TestLogGrepMessage() {{{
 function! TestLogGrepMessage()
   view file1.txt
@@ -254,57 +307,6 @@ function! TestLogGrepFiles()
   winc l
   call vunit#AssertEquals(expand('%'), 'vcs_df552e0_file2.txt')
   call vunit#AssertEquals(line('$'), 2)
-endfunction " }}}
-
-" TestLogFiles() {{{
-function! TestLogFiles()
-  view file2.txt
-  call vunit#PeekRedir()
-  VcsLog
-  call vunit#AssertEquals(expand('%'), '[vcs_log]')
-  call vunit#AssertEquals(getline(1), 'test/file2.txt')
-  call vunit#AssertEquals(line('$'), 5)
-  call cursor(3, 1)
-  exec "normal \<cr>"
-  call vunit#AssertEquals(getline(7), '  + files')
-  call cursor(7, 1)
-  exec "normal \<cr>"
-
-  call vunit#AssertEquals(getline( 7), '  - files')
-  call vunit#AssertEquals(getline( 8), '    |M| test/file2.txt')
-  call vunit#AssertEquals(getline( 9), '    |A| test/file3.txt')
-  call vunit#AssertEquals(getline(10), '    |R| test/file4.txt -> test/file5.txt')
-
-  " modified file
-  call cursor(8, 6)
-  exec "normal \<cr>"
-  call vunit#AssertEquals(expand('%'), 'vcs_ee5a562_file2.txt')
-  call vunit#AssertEquals(line('$'), 4)
-  winc l
-  call vunit#AssertEquals(expand('%'), 'vcs_101e4be_file2.txt')
-  call vunit#AssertEquals(line('$'), 3)
-  bdelete
-  bdelete
-  winc j
-
-  " new file
-  call cursor(9, 6)
-  exec "normal \<cr>"
-  call vunit#AssertEquals(expand('%'), 'vcs_ee5a562_file3.txt')
-  call vunit#AssertEquals(line('$'), 4)
-  bdelete
-  winc j
-
-  " moved file
-  call cursor(10, 6)
-  exec "normal \<cr>"
-  call vunit#AssertEquals(expand('%'), 'vcs_ee5a562_file5.txt')
-  call vunit#AssertEquals(line('$'), 1)
-  winc l
-  call vunit#AssertEquals(expand('%'), 'vcs_35a1f6a_file4.txt')
-  call vunit#AssertEquals(line('$'), 1)
-  bdelete
-  bdelete
 endfunction " }}}
 
 " vim:ft=vim:fdm=marker

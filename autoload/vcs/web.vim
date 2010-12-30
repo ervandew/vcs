@@ -319,7 +319,7 @@ function! s:DetermineBrowser()
       if browser == ''
         for name in s:win_browsers
           if has('win32unix')
-            let name = s:CygPath(name)
+            let name = s:Cygpath(name)
           endif
           if executable(name)
             let browser = name

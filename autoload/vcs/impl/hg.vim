@@ -43,7 +43,7 @@ endif
 
 " Script Variables {{{
   let s:trackerIdPattern = join(vcs#command#VcsTrackerIdPatterns, '\|')
-  let s:path = substitute(expand('<sfile>:h'), '\', '', 'g')
+  let s:path = substitute(expand('<sfile>:h'), '\', '/', 'g')
 " }}}
 
 " GetAnnotations(path, revision) {{{

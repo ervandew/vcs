@@ -54,6 +54,13 @@ endif
 
 " }}}
 
+" Autocmds {{{
+
+autocmd BufRead hg-editor-* set ft=hg
+autocmd BufRead COMMIT_EDITMSG set ft=gitcommit
+
+" }}}
+
 " Command Declarations {{{
 if !exists(":VcsLog")
   command -nargs=* VcsLog

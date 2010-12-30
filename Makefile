@@ -19,4 +19,4 @@ all:
 	@rm $(TEMP)
 
 clean:
-	@rm -R build 2> /dev/null || true
+	@rm -Rf build 2> /dev/null || true

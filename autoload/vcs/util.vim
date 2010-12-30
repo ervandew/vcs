@@ -642,8 +642,11 @@ function! vcs#util#System(cmd, ...)
       let outfile = s:temp_dir . '/vcs_exec_output.txt'
       if has('win32') || has('win64') || has('win32unix')
         let cmd = substitute(cmd, '^"\(.*\)"$', '\1', '')
+        let cmd = substitute(cmd, '^!', '', '')
+        " dos blows
+        let cmd = substitute(cmd, '|', '^^^|', 'g')
         if executable('tee')
-          let teefile = has('win32unix') ? s:CygPath(outfile) : outfile
+          let teefile = has('win32unix') ? s:Cygpath(outfile) : outfile
           let cmd = '!cmd /c "' . cmd . ' 2>&1 | tee "' . teefile . '" "'
         else
           let cmd = '!cmd /c "' . cmd . ' >"' . outfile . '" 2>&1 "'
@@ -678,7 +681,7 @@ function! vcs#util#System(cmd, ...)
   return result
 endfunction " }}}
 
-" s:CygPath(path) {{{
+" s:Cygpath(path) {{{
 function! s:Cygpath(path)
   if executable('cygpath')
     let path = substitute(a:path, '\', '/', 'g')
