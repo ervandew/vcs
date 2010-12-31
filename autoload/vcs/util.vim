@@ -266,8 +266,8 @@ function vcs#util#Vcs(cmd, args, ...)
   if exec
     let cmd = '!' . cmd
   endif
-  let result = vcs#util#System(cmd . ' ' . args, exec, 1)
-  if v:shell_error
+  let [error, result] = vcs#util#System(cmd . ' ' . args, exec, 1)
+  if error
     call vcs#util#EchoError(
       \ "Error executing command: " . a:cmd . " " . a:args . "\n" . result)
     throw 'vcs error'
@@ -608,6 +608,40 @@ endfunction " }}}
 " System(cmd, [exec, exec_results]) {{{
 " Executes system() accounting for possibly disruptive vim options.
 function! vcs#util#System(cmd, ...)
+  " on windows, if python is available + exec not requests, use subprocess to
+  " avoid the annoying dos cmd console.
+  if (has('win32') || has('win64')) &&
+   \ (len(a:000) == 0 || !a:000[0]) &&
+   \ has('python')
+    let cwd = getcwd()
+python << PYTHONEOF
+import subprocess
+import vim
+
+cmd = vim.eval('a:cmd')
+startupinfo = subprocess.STARTUPINFO()
+startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+process = subprocess.Popen(
+  cmd,
+  cwd=vim.eval('cwd'),
+  stdout=subprocess.PIPE,
+  stderr=subprocess.PIPE,
+  startupinfo=startupinfo)
+error = process.wait() != 0
+stdout, stderr = process.communicate()
+result = stdout + stderr
+vim.command('let result = %s' % ('%r' % result).replace("\\'", "''"))
+vim.command('let error = %i' % error)
+PYTHONEOF
+
+    " from the above code new lines and tabs will end up as literal \n and \t,
+    " so replace them with actual new lines and tabs to that all the code that
+    " expects those still works.
+    let result = substitute(result, '\\n', '\n', 'g')
+    let result = substitute(result, '\\t', '\t', 'g')
+    return [error, result]
+  endif
+
   let saveshell = &shell
   let saveshellcmdflag = &shellcmdflag
   let saveshellpipe = &shellpipe
@@ -678,14 +712,14 @@ function! vcs#util#System(cmd, ...)
   let &shellpipe = saveshellpipe
   let &shellredir = saveshellredir
 
-  return result
+  return [v:shell_error, result]
 endfunction " }}}
 
 " s:Cygpath(path) {{{
 function! s:Cygpath(path)
   if executable('cygpath')
     let path = substitute(a:path, '\', '/', 'g')
-    let path = vcs#util#System('cygpath "' . path . '"')
+    let [error, path] = vcs#util#System('cygpath "' . path . '"')
     let path = substitute(path, '\n$', '', '')
     return path
   endif
