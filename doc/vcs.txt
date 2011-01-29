@@ -92,17 +92,28 @@ allowing you to hit <enter> on one of the files to view a diff of the version
 to be committed against the last committed version, or in the case of newly
 added files, view the file to be added.
 
-  Note: Git users, issuing a 'git commit' from any directory other than
-  the root of your working copy may lead to errors when attempting to view a
-  diff or file in the editor.  This is due to git changing the working
-  directory to the root but leaving the displayed file paths as relative,
-  preventing the vcs plugin from being able to determine where those files
-  reside.  To resolve this issue you will need to run the following to
-  configure git to always display the full path (like mercurial does by
-  default):
+Note: Git users, issuing a 'git commit' from any directory other than the root
+of your working copy may lead to errors when attempting to view a diff or file
+in the editor.  This is due to git changing the working directory to the root
+but leaving the displayed file paths as relative, preventing the vcs plugin
+from being able to determine where those files reside.  To resolve this issue
+you will need to run the following to configure git to always display the full
+path (like mercurial does by default):
 
-  >
-    $ git config --global status.relativePaths false
+>
+  $ git config --global status.relativePaths false
+
+Another option is to create a git-commit-abs script in your path which
+temporarily sets the above setting and then use 'git commit-abs <args>' or
+create a git alias like the example below which lets you use 'git ci <args>'
+instead:
+
+>
+  $ echo -e '#!/bin/bash\ngit -c status.relativePaths=false commit "$@"' \
+    > /usr/bin/git-commit-abs
+  $ chmod 755 /usr/bin/git-commit-abs
+  $ git config --global alias.ci commit-abs
+
 
 -----------------------------------------------------------------------------
 Configuration                                    *vcs-configuration*
