@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2011, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -151,7 +151,7 @@ function vcs#web#VcsWeb(url_func, ...)
   endif
 
   let path = exists('b:filename') ? b:filename : expand('%:p')
-  let root = vcs#util#GetRoot(a:path)
+  let root = vcs#util#GetRoot(path)
   let path = vcs#util#GetRelativePath(path)
   if root == ''
     call vcs#util#EchoError('Current file is not under a supported version control.')
