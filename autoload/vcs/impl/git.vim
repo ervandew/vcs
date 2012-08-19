@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -132,6 +132,13 @@ endfunction " }}}
 
 " GetRoot() {{{
 function vcs#impl#git#GetRoot()
+  " try submodule first
+  let submodule = findfile('.git', escape(getcwd(), ' ') . ';')
+  if submodule != '' && readfile(submodule, '', 1)[0] =~ '^gitdir:'
+    return fnamemodify(submodule, ':p:h')
+  endif
+
+  " try standard .git dir
   let root = finddir('.git', escape(getcwd(), ' ') . ';')
   if root == ''
     return
