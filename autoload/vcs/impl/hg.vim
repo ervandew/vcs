@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -48,7 +48,7 @@ endif
 
 " GetAnnotations(path, revision) {{{
 function! vcs#impl#hg#GetAnnotations(path, revision)
-  let cmd = 'annotate -udc'
+  let cmd = 'annotate -uncd'
   if a:revision != ''
     let revision = substitute(a:revision, '.*:', '', '')
     let cmd .= ' -r ' . revision
@@ -60,7 +60,7 @@ function! vcs#impl#hg#GetAnnotations(path, revision)
 
   let annotations = split(result, '\n')
   call map(annotations,
-      \ "substitute(v:val, '^\\s*\\(.\\{-}\\)\\s\\(\\w\\+\\)\\s\\(.\\{-}\\):\\s.*', '\\2 (\\3) \\1', '')")
+      \ "substitute(v:val, '^\\s*\\(.*\\)\\s\\d\\+\\s\\(\\w\\+\\)\\s\\(.\\{-}\\):\\s.*', '\\2 (\\3) \\1', '')")
 
   return annotations
 endfunction " }}}
