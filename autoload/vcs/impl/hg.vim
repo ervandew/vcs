@@ -110,6 +110,11 @@ function vcs#impl#hg#GetRevisions()
   return revs
 endfunction " }}}
 
+" GetOrigin() {{{
+function vcs#impl#hg#GetOrigin()
+  return substitute(vcs#impl#hg#Hg('showconfig paths.default'), '\n$', '', '')
+endfunction " }}}
+
 " GetRoot() {{{
 function vcs#impl#hg#GetRoot()
   let root = vcs#impl#hg#Hg('root')

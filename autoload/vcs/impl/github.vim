@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -40,6 +40,21 @@ if !exists('g:vcs_github_loaded')
 else
   finish
 endif
+
+" GetSettings(origin) {{{
+function vcs#impl#github#GetSettings(origin)
+  if a:origin =~ '^git@github.com'
+    let project = substitute(a:origin, 'git@github.com:\(.*\)\.git', '\1', '')
+  else
+    let project = substitute(a:origin, '\(git\|https\?\)://github\.com/\(.*\)\.git', '\2', '')
+  endif
+  let url = 'https://github.com/' . project
+  return {
+    \ 'web_viewer': 'github',
+    \ 'web_url': url,
+    \ 'tracker_url': url . '/issues/<id>'
+  \ }
+endfunction " }}}
 
 " GetLogUrl(root, file, args) {{{
 function vcs#impl#github#GetLogUrl(root, file, args)

@@ -130,6 +130,11 @@ function vcs#impl#git#GetRevisions()
   return revs
 endfunction " }}}
 
+" GetOrigin() {{{
+function vcs#impl#git#GetOrigin()
+  return substitute(vcs#impl#git#Git('config --get remote.origin.url'), '\n$', '', '')
+endfunction " }}}
+
 " GetRoot() {{{
 function vcs#impl#git#GetRoot()
   " try submodule first

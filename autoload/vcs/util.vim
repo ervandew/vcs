@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -239,6 +239,26 @@ function vcs#util#GetSettings()
       return settings
     endif
   endfor
+
+  " try to detect settings based on the origin
+  let GetOrigin = vcs#util#GetVcsFunction('GetOrigin')
+  if type(GetOrigin) == 2
+    let origin = GetOrigin()
+    if origin != ''
+      let host = substitute(origin, '.\{-}\(\w\+\)\.\(com\|net\|org\).*', '\1', '')
+      let GetSettings = vcs#web#GetVcsWebFunction(host, 'GetSettings')
+      if type(GetSettings) == 2
+        try
+          let settings = GetSettings(origin)
+          let g:VcsRepositorySettings[vcs_root] = settings
+          return settings
+        catch /E117/
+          " function not found
+        endtry
+      endif
+    endif
+  endif
+
   return {}
 endfunction " }}}
 

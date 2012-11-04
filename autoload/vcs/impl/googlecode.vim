@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -40,6 +40,17 @@ if !exists('g:vcs_googlecode_loaded')
 else
   finish
 endif
+
+" GetSettings(origin) {{{
+function vcs#impl#googlecode#GetSettings(origin)
+  let project = substitute(a:origin, 'https\?://\(.\{-}\)\.googlecode\.com.*', '\1', '')
+  let url = 'https://code.google.com/p/' . project
+  return {
+    \ 'web_viewer': 'googlecode',
+    \ 'web_url': url,
+    \ 'tracker_url': url . '/issues/detail?id=<id>'
+  \ }
+endfunction " }}}
 
 " GetLogUrl(root, file, args) {{{
 function vcs#impl#googlecode#GetLogUrl(root, file, args)

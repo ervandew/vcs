@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -41,10 +41,23 @@ else
   finish
 endif
 
+" GetSettings(origin) {{{
+function vcs#impl#bitbucket#GetSettings(origin)
+  let project = substitute(a:origin, '.*\<bitbucket\.org/\(.\{-}\)', '\1', '')
+  if vcs#util#GetVcsType() == 'git'
+    let project = substitute(project, '\.git$', '', '')
+  endif
+  let url = 'https://bitbucket.org/' . project
+  return {
+    \ 'web_viewer': 'bitbucket',
+    \ 'web_url': url,
+    \ 'tracker_url': url . '/issue/<id>'
+  \ }
+endfunction " }}}
+
 " GetLogUrl(root, file, args) {{{
 function vcs#impl#bitbucket#GetLogUrl(root, file, args)
-  "return a:root . '/history/' . a:args[0] . '/' . a:file
-  return a:root . '/history/' . a:file
+  return a:root . '/history-node/' . a:args[0] . '/' . a:file
 endfunction " }}}
 
 " GetChangeSetUrl(root, file, args) {{{
