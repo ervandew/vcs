@@ -628,40 +628,6 @@ endfunction " }}}
 " System(cmd, [exec, exec_results]) {{{
 " Executes system() accounting for possibly disruptive vim options.
 function! vcs#util#System(cmd, ...)
-  " on windows, if python is available + exec not requests, use subprocess to
-  " avoid the annoying dos cmd console.
-  if (has('win32') || has('win64')) &&
-   \ (len(a:000) == 0 || !a:000[0]) &&
-   \ has('python')
-    let cwd = getcwd()
-python << PYTHONEOF
-import subprocess
-import vim
-
-cmd = vim.eval('a:cmd')
-startupinfo = subprocess.STARTUPINFO()
-startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-process = subprocess.Popen(
-  cmd,
-  cwd=vim.eval('cwd'),
-  stdout=subprocess.PIPE,
-  stderr=subprocess.PIPE,
-  startupinfo=startupinfo)
-error = process.wait() != 0
-stdout, stderr = process.communicate()
-result = stdout + stderr
-vim.command('let result = %s' % ('%r' % result).replace("\\'", "''"))
-vim.command('let error = %i' % error)
-PYTHONEOF
-
-    " from the above code new lines and tabs will end up as literal \n and \t,
-    " so replace them with actual new lines and tabs to that all the code that
-    " expects those still works.
-    let result = substitute(result, '\\n', '\n', 'g')
-    let result = substitute(result, '\\t', '\t', 'g')
-    return [error, result]
-  endif
-
   let saveshell = &shell
   let saveshellcmdflag = &shellcmdflag
   let saveshellpipe = &shellpipe
