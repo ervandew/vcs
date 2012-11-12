@@ -155,11 +155,11 @@ endfunction " }}}
 
 " GetInfo() {{{
 function vcs#impl#git#GetInfo()
-  let info = vcs#impl#git#Git('branch')
+  let info = vcs#impl#git#Git('rev-parse --abbrev-ref HEAD')
   if info == '0'
     return ''
   endif
-  let info = 'git:' . substitute(info, '.*\*\s*\(.\{-}\)\(\n.*\|$\)', '\1', 'g')
+  let info = 'git:' . substitute(info, '\_s$', '', '')
   return info
 endfunction " }}}
 
