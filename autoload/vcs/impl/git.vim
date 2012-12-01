@@ -155,12 +155,18 @@ endfunction " }}}
 
 " GetInfo() {{{
 function vcs#impl#git#GetInfo()
-  let info = vcs#impl#git#Git('rev-parse --abbrev-ref HEAD')
-  if info == '0'
+  " better, but will error if the git repo has no commits
+  "let info = vcs#impl#git#Git('rev-parse --abbrev-ref HEAD')
+  let branch = vcs#impl#git#Git('branch')
+  if branch == '0'
     return ''
   endif
-  let info = 'git:' . substitute(info, '\_s$', '', '')
-  return info
+  "let branch = substitute(branch, '\_s$', '', '')
+  let branch = substitute(branch, '.*\*\s*\(.\{-}\)\(\n.*\|$\)', '\1', 'g')
+  if branch == ''
+    let branch = 'master'
+  endif
+  return 'git:' . branch
 endfunction " }}}
 
 " GetEditorFile() {{{
