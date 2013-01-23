@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -67,7 +67,7 @@ endfunction " }}}
 
 " GetPreviousRevision(path, [revision]) {{{
 function vcs#impl#hg#GetPreviousRevision(path, ...)
-  let cmd = 'log -q --template "{node|short}\n"'
+  let cmd = 'log -f -q --template "{node|short}\n"'
   if len(a:000) > 0 && a:000[0] != ''
     let cmd .= ' -r' . a:000[0] . ':1'
   endif
@@ -81,7 +81,7 @@ endfunction " }}}
 
 " GetRevision(path) {{{
 function vcs#impl#hg#GetRevision(path)
-  let log = vcs#impl#hg#Hg('log -q --template "{node|short}\n" --limit 1 "' . a:path . '"')
+  let log = vcs#impl#hg#Hg('log -f -q --template "{node|short}\n" --limit 1 "' . a:path . '"')
   if type(log) == 0
     return
   endif
@@ -162,7 +162,7 @@ endfunction " }}}
 
 " Info(path) {{{
 function vcs#impl#hg#Info(path)
-  let result = vcs#impl#hg#Hg('log --limit 1 "' . a:path . '"')
+  let result = vcs#impl#hg#Hg('log -f --limit 1 "' . a:path . '"')
   if type(result) == 0
     return
   endif
@@ -173,7 +173,7 @@ endfunction " }}}
 function vcs#impl#hg#Log(args, ...)
   " Note: tags are space separated, so if the user has a space in their tag
   " name, that tag will be screwed in the log.
-  let logcmd = 'log  --template "{node|short}|{author}|{date|age}|{tags}|{desc|firstline}\n"'
+  let logcmd = 'log -f --template "{node|short}|{author}|{date|age}|{tags}|{desc|firstline}\n"'
   if g:VcsLogMaxEntries > 0
     let logcmd .= ' --limit ' . g:VcsLogMaxEntries
   endif
