@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2011, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -35,8 +35,7 @@
 "   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 " }}}
 
-" ViewDiff {{{
-function vcs#editor#ViewDiff()
+function! vcs#editor#ViewDiff() " {{{
   let GetEditorFile = vcs#util#GetVcsFunction('GetEditorFile')
   if type(GetEditorFile) != 2
     return
@@ -58,14 +57,31 @@ function vcs#editor#ViewDiff()
 
     exec 'belowright sview ' . escape(file, ' ')
     let b:vcs_editor_diff = 1
+    autocmd BufEnter <buffer> nested call s:CloseIfLastWindow()
 
     " if file is versioned, execute VcsDiff
     let path = substitute(expand('%:p'), '\', '/', 'g')
     let revision = vcs#util#GetRevision(path)
     if revision != ''
       VcsDiff
+      autocmd BufEnter <buffer> nested call s:CloseIfLastWindow()
     endif
   endif
+endfunction " }}}
+
+function! s:CloseIfLastWindow() " {{{
+  " if nothing but differ buffers are open, then close vim.
+  let winend = winnr('$')
+  let winnum = 1
+  while winnum <= winend
+    let bufnr = winbufnr(winnum)
+    if getbufvar(bufnr, 'vcs_editor_diff') == '' &&
+       \ getbufvar(bufnr, 'vcs_diff_temp') == ''
+      return
+    endif
+    let winnum += 1
+  endwhile
+  quitall
 endfunction " }}}
 
 " vim:ft=vim:fdm=marker
