@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -91,7 +91,11 @@ endfunction " }}}
 
 " Diff(revision) {{{
 " Diffs the current file against the current or supplied revision.
-function! vcs#command#Diff(revision)
+function! vcs#command#Diff(revision, ...)
+  " Optional args:
+  "   bang: when not empty, open the diff using the opposite of the configured
+  "         default.
+
   let path = expand('%:p')
   let relpath = vcs#util#GetRelativePath(expand('%:p'))
   let revision = a:revision
@@ -109,6 +113,10 @@ function! vcs#command#Diff(revision)
   let buf1 = bufnr('%')
 
   let orien = g:VcsDiffOrientation == 'horizontal' ? '' : 'vertical'
+  if a:0 && a:1 != ''
+    let orien = orien == '' ? 'vertical' : ''
+  endif
+
   call vcs#command#ViewFileRevision(path, revision, 'bel ' . orien . ' split')
   diffthis
 

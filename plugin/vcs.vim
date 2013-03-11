@@ -5,7 +5,7 @@
 " }}}
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -69,9 +69,9 @@ if !exists(":VcsLog")
     \ endif
   command -nargs=* VcsLogGrepMessage call vcs#command#LogGrep(<q-args>, 'message')
   command -nargs=* VcsLogGrepFiles call vcs#command#LogGrep(<q-args>, 'files')
-  command -nargs=? VcsDiff
+  command -nargs=? -bang VcsDiff
     \ if s:CheckWindow() |
-    \   call vcs#command#Diff('<args>') |
+    \   call vcs#command#Diff('<args>', '<bang>') |
     \ endif
   command -nargs=? VcsCat
     \ if s:CheckWindow() |
