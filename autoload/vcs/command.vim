@@ -56,8 +56,10 @@ runtime autoload/vcs/util.vim
   let s:trackerIdPattern = join(vcs#command#VcsTrackerIdPatterns, '\|')
 " }}}
 
-" Annotate([revision]) {{{
-function! vcs#command#Annotate(...)
+function! vcs#command#Annotate(...) " {{{
+  " Optional args:
+  "   revision
+
   if exists('b:vcs_annotations')
     call s:AnnotateOff()
     return
@@ -89,9 +91,8 @@ function! vcs#command#Annotate(...)
   call s:ApplyAnnotations(annotations)
 endfunction " }}}
 
-" Diff(revision) {{{
-" Diffs the current file against the current or supplied revision.
-function! vcs#command#Diff(revision, ...)
+function! vcs#command#Diff(revision, ...) " {{{
+  " Diffs the current file against the current or supplied revision.
   " Optional args:
   "   bang: when not empty, open the diff using the opposite of the configured
   "         default.
@@ -132,9 +133,8 @@ function! vcs#command#Diff(revision, ...)
   diffthis
 endfunction " }}}
 
-" Info() {{{
-" Retrieves and echos info on the current file.
-function! vcs#command#Info()
+function! vcs#command#Info() " {{{
+  " Retrieves and echos info on the current file.
   let path = vcs#util#GetRelativePath()
   let cwd = vcs#util#LcdRoot()
   try
@@ -147,9 +147,9 @@ function! vcs#command#Info()
   endtry
 endfunction " }}}
 
-" Log(args) {{{
-" Opens a buffer with the results of running a log for the supplied arguments.
-function! vcs#command#Log(args)
+function! vcs#command#Log(args) " {{{
+  " Opens a buffer with the results of running a log for the supplied
+  " arguments.
   let cwd = vcs#util#LcdRoot()
   let args = a:args
   let path = a:args == '' ? vcs#util#GetRelativePath() : ''
@@ -217,8 +217,7 @@ function! vcs#command#Log(args)
   endif
 endfunction " }}}
 
-" LogGrep(args, type) {{{
-function! vcs#command#LogGrep(args, type)
+function! vcs#command#LogGrep(args, type) " {{{
   if a:args == ''
     call vcs#util#EchoError('Pattern required.')
     return
@@ -264,9 +263,8 @@ function! vcs#command#LogGrep(args, type)
   call s:LogMappings()
 endfunction " }}}
 
-" ViewFileRevision(path, revision, open_cmd) {{{
-" Open a read only view for the revision of the supplied version file.
-function! vcs#command#ViewFileRevision(path, revision, open_cmd)
+function! vcs#command#ViewFileRevision(path, revision, open_cmd) " {{{
+  " Open a read only view for the revision of the supplied version file.
   let path = vcs#util#GetRelativePath(a:path)
   let revision = a:revision
   if revision == ''
@@ -331,8 +329,7 @@ function! vcs#command#ViewFileRevision(path, revision, open_cmd)
   let b:vcs_props = copy(props)
 endfunction " }}}
 
-" s:ApplyAnnotations(annotations) {{{
-function! s:ApplyAnnotations(annotations)
+function! s:ApplyAnnotations(annotations) " {{{
   let existing = {}
   let existing_annotations = {}
   for exists in vcs#util#GetExistingSigns()
@@ -394,8 +391,7 @@ function! s:ApplyAnnotations(annotations)
   augroup END
 endfunction " }}}
 
-" s:AnnotateInfo() {{{
-function! s:AnnotateInfo()
+function! s:AnnotateInfo() " {{{
   if mode() != 'n'
     return
   endif
@@ -405,8 +401,7 @@ function! s:AnnotateInfo()
   endif
 endfunction " }}}
 
-" s:AnnotateOff() {{{
-function! s:AnnotateOff()
+function! s:AnnotateOff() " {{{
   if exists('b:vcs_annotations')
     let defined = vcs#util#GetDefinedSigns()
     for annotation in b:vcs_annotations
@@ -432,24 +427,21 @@ function! s:AnnotateOff()
   augroup END
 endfunction " }}}
 
-" s:AnnotateCat() {{{
-function! s:AnnotateCat()
+function! s:AnnotateCat() " {{{
   if exists('b:vcs_annotations') && len(b:vcs_annotations) >= line('.')
     let revision = split(b:vcs_annotations[line('.') - 1])[0]
     call vcs#command#ViewFileRevision(b:vcs_props.path, revision, '')
   endif
 endfunction " }}}
 
-" s:AnnotateDiff() {{{
-function! s:AnnotateDiff()
+function! s:AnnotateDiff() " {{{
   if exists('b:vcs_annotations') && len(b:vcs_annotations) >= line('.')
     let revision = split(b:vcs_annotations[line('.') - 1])[0]
     call vcs#command#Diff(revision)
   endif
 endfunction " }}}
 
-" s:Action() {{{
-function! s:Action()
+function! s:Action() " {{{
   try
     let line = getline('.')
 
@@ -575,8 +567,7 @@ function! s:Action()
   endtry
 endfunction " }}}
 
-" s:LogLine(entry) {{{
-function! s:LogLine(entry)
+function! s:LogLine(entry) " {{{
   let entry = a:entry
   let refs = ''
   if len(entry.refs)
@@ -586,8 +577,7 @@ function! s:LogLine(entry)
     \ entry.revision, refs, entry.author, entry.age, entry.comment)
 endfunction " }}}
 
-" s:ToggleDetail() {{{
-function! s:ToggleDetail()
+function! s:ToggleDetail() " {{{
   let line = getline('.')
   let lnum = line('.')
   let revision = s:GetRevision()
@@ -625,8 +615,7 @@ function! s:ToggleDetail()
   setlocal nomodifiable readonly
 endfunction " }}}
 
-" s:ToggleFiles() {{{
-function! s:ToggleFiles()
+function! s:ToggleFiles() " {{{
   let line = getline('.')
   let lnum = line('.')
   let revision = s:GetRevision()
@@ -666,27 +655,23 @@ function! s:ToggleFiles()
   setlocal nomodifiable readonly
 endfunction " }}}
 
-" s:GetProps() {{{
-function! s:GetProps()
+function! s:GetProps() " {{{
   return {
       \ 'root_dir': vcs#util#GetRoot(),
       \ 'path': vcs#util#GetRelativePath(),
     \ }
 endfunction " }}}
 
-" s:GetFilePath() {{{
-function! s:GetFilePath()
+function! s:GetFilePath() " {{{
   return getline(1)
 endfunction " }}}
 
-" s:GetRevision() {{{
-function! s:GetRevision()
+function! s:GetRevision() " {{{
   let lnum = search('^[+-] \w\+', 'bcnW')
   return substitute(getline(lnum), '[+-] \(\w\+\) .*', '\1', '')
 endfunction " }}}
 
-" s:GetPreviousRevision() {{{
-function! s:GetPreviousRevision()
+function! s:GetPreviousRevision() " {{{
   let lnum = search('^[+-] \w\+', 'nW')
   if lnum == 0
     call vcs#util#EchoWarning('Could not find the previous revision number')
@@ -695,8 +680,7 @@ function! s:GetPreviousRevision()
   return substitute(getline(lnum), '[+-] \(\w\+\) .*', '\1', '')
 endfunction " }}}
 
-" s:LogDetail(revision) {{{
-function! s:LogDetail(revision)
+function! s:LogDetail(revision) " {{{
   let LogDetail = vcs#util#GetVcsFunction('LogDetail')
   if type(LogDetail) != 2
     return
@@ -704,8 +688,7 @@ function! s:LogDetail(revision)
   return LogDetail(a:revision)
 endfunction " }}}
 
-" s:LogFiles(revision) {{{
-function! s:LogFiles(revision)
+function! s:LogFiles(revision) " {{{
   let LogFiles = vcs#util#GetVcsFunction('LogFiles')
   if type(LogFiles) != 2
     return
@@ -713,13 +696,11 @@ function! s:LogFiles(revision)
   return LogFiles(a:revision)
 endfunction " }}}
 
-" s:LogMappings() {{{
-function! s:LogMappings()
+function! s:LogMappings() " {{{
   nnoremap <silent> <buffer> <cr> :call <SID>Action()<cr>
 endfunction " }}}
 
-" s:LogSyntax() {{{
-function! s:LogSyntax()
+function! s:LogSyntax() " {{{
   set ft=vcs_log
   hi link VcsRevision Identifier
   hi link VcsRefs Tag
@@ -733,8 +714,7 @@ function! s:LogSyntax()
   exec 'syntax match VcsFiles /\(^\s\+[+-] \)\@<=files$/'
 endfunction " }}}
 
-" s:TempWindow(props, lines) {{{
-function! s:TempWindow(props, lines)
+function! s:TempWindow(props, lines) " {{{
   let winnr = winnr()
   let filename = expand('%:p')
   if expand('%') == '[vcs_log]' && exists('b:filename')

@@ -53,8 +53,7 @@ augroup END
   let s:trackerIdPattern = join(vcs#command#VcsTrackerIdPatterns, '\|')
 " }}}
 
-" GetAnnotations(path, revision) {{{
-function! vcs#impl#git#GetAnnotations(path, revision)
+function! vcs#impl#git#GetAnnotations(path, revision) " {{{
   let cmd = 'annotate'
   let revision = ''
   if a:revision != ''
@@ -74,8 +73,10 @@ function! vcs#impl#git#GetAnnotations(path, revision)
   return annotations
 endfunction " }}}
 
-" GetPreviousRevision(path, [revision]) {{{
-function vcs#impl#git#GetPreviousRevision(path, ...)
+function! vcs#impl#git#GetPreviousRevision(path, ...) " {{{
+  " Optional args:
+  "   revision
+
   let revision = 'HEAD'
   if len(a:000)
     let revision = a:000[0]
@@ -89,8 +90,7 @@ function vcs#impl#git#GetPreviousRevision(path, ...)
   return substitute(prev, '\n', '', 'g')
 endfunction " }}}
 
-" GetRevision(path) {{{
-function vcs#impl#git#GetRevision(path)
+function! vcs#impl#git#GetRevision(path) " {{{
   " for some reason, in some contexts (git commit buffer), the git command
   " will fail if not run from root of the repos.
   let root = vcs#impl#git#GetRoot()
@@ -110,8 +110,7 @@ function vcs#impl#git#GetRevision(path)
   return substitute(rev, '\n', '', '')
 endfunction " }}}
 
-" GetRevisions() {{{
-function vcs#impl#git#GetRevisions()
+function! vcs#impl#git#GetRevisions() " {{{
   let revs = []
 
   let result = vcs#impl#git#Git('tag -l')
@@ -130,13 +129,11 @@ function vcs#impl#git#GetRevisions()
   return revs
 endfunction " }}}
 
-" GetOrigin() {{{
-function vcs#impl#git#GetOrigin()
+function! vcs#impl#git#GetOrigin() " {{{
   return substitute(vcs#impl#git#Git('config --get remote.origin.url'), '\n$', '', '')
 endfunction " }}}
 
-" GetRoot() {{{
-function vcs#impl#git#GetRoot()
+function! vcs#impl#git#GetRoot() " {{{
   " try submodule first
   let submodule = findfile('.git', escape(getcwd(), ' ') . ';')
   if submodule != '' && readfile(submodule, '', 1)[0] =~ '^gitdir:'
@@ -153,8 +150,7 @@ function vcs#impl#git#GetRoot()
   return root
 endfunction " }}}
 
-" GetInfo() {{{
-function vcs#impl#git#GetInfo()
+function! vcs#impl#git#GetInfo() " {{{
   " better, but will error if the git repo has no commits
   "let info = vcs#impl#git#Git('rev-parse --abbrev-ref HEAD')
   let branch = vcs#impl#git#Git('branch')
@@ -169,8 +165,7 @@ function vcs#impl#git#GetInfo()
   return 'git:' . branch
 endfunction " }}}
 
-" GetEditorFile() {{{
-function vcs#impl#git#GetEditorFile()
+function! vcs#impl#git#GetEditorFile() " {{{
   let line = getline('.')
   if line =~ '^#\s*modified:.*'
     let file = substitute(line, '^#\s*modified:\s\+\(.*\)\s*', '\1', '')
@@ -196,8 +191,7 @@ function vcs#impl#git#GetEditorFile()
   return ''
 endfunction " }}}
 
-" GetModifiedFiles() {{{
-function vcs#impl#git#GetModifiedFiles()
+function! vcs#impl#git#GetModifiedFiles() " {{{
   let root = vcs#impl#git#GetRoot()
   let status = vcs#impl#git#Git('diff --name-status HEAD')
   let files = []
@@ -215,8 +209,7 @@ function vcs#impl#git#GetModifiedFiles()
   return files
 endfunction " }}}
 
-" Info(path) {{{
-function vcs#impl#git#Info(path)
+function! vcs#impl#git#Info(path) " {{{
   let result = vcs#impl#git#Git('log -1 "' . a:path . '"')
   if type(result) == 0
     return
@@ -224,8 +217,10 @@ function vcs#impl#git#Info(path)
   call vcs#util#Echo(result)
 endfunction " }}}
 
-" Log(args [, exec]) {{{
-function vcs#impl#git#Log(args, ...)
+function! vcs#impl#git#Log(args, ...) " {{{
+  " Optional args:
+  "   exec: non-0 to run the command with exec
+
   let logcmd = 'log --pretty=tformat:"%h|%cn|%cr|%d|%s|"'
   if g:VcsLogMaxEntries > 0
     let logcmd .= ' -' . g:VcsLogMaxEntries
@@ -259,8 +254,7 @@ function vcs#impl#git#Log(args, ...)
   return {'log': log, 'props': {'root_dir': root_dir}}
 endfunction " }}}
 
-" LogGrep(pattern, args, type) {{{
-function vcs#impl#git#LogGrep(pattern, args, type)
+function! vcs#impl#git#LogGrep(pattern, args, type) " {{{
   let args = ''
   if a:type == 'message'
     let args .= '-E "--grep=' . a:pattern . '"'
@@ -274,8 +268,7 @@ function vcs#impl#git#LogGrep(pattern, args, type)
   return vcs#impl#git#Log(args, 1)
 endfunction " }}}
 
-" LogDetail(revision) {{{
-function vcs#impl#git#LogDetail(revision)
+function! vcs#impl#git#LogDetail(revision) " {{{
   let logcmd = 'log -1 --pretty=tformat:"%h|%cn|%cr|%ci|%d|%s|%s%n%n%b|" '
   let result = vcs#impl#git#Git(logcmd . a:revision)
   if type(result) == 0
@@ -294,8 +287,7 @@ function vcs#impl#git#LogDetail(revision)
    \ }
 endfunction " }}}
 
-" LogFiles(revision) {{{
-function vcs#impl#git#LogFiles(revision)
+function! vcs#impl#git#LogFiles(revision) " {{{
   let logcmd = 'log -1 --name-status --pretty=tformat:"" '
   let result = vcs#impl#git#Git(logcmd . a:revision)
   if type(result) == 0
@@ -315,8 +307,7 @@ function vcs#impl#git#LogFiles(revision)
   return files
 endfunction " }}}
 
-" ViewFileRevision(path, revision) {{{
-function! vcs#impl#git#ViewFileRevision(path, revision)
+function! vcs#impl#git#ViewFileRevision(path, revision) " {{{
   let path = a:path
 
   " kind of a hack to support diffs against git's staging (index) area.
@@ -328,9 +319,9 @@ function! vcs#impl#git#ViewFileRevision(path, revision)
   return split(result, '\n')
 endfunction " }}}
 
-" Git(args [, exec]) {{{
-" Executes 'git' with the supplied args.
-function vcs#impl#git#Git(args, ...)
+function! vcs#impl#git#Git(args, ...) " {{{
+  " Optional args:
+  "   exec: non-0 to run the command with exec
   let exec = len(a:000) > 0 && a:000[0]
   let result = vcs#util#Vcs('git', '--no-pager ' . a:args, exec)
 
@@ -344,10 +335,9 @@ function vcs#impl#git#Git(args, ...)
   return result
 endfunction " }}}
 
-" s:ReadIndex() {{{
-" Used to read a file with the name index_blob_<index hash>_<filename>, for
-" use by the git editor diff support.
-function! s:ReadIndex()
+function! s:ReadIndex() " {{{
+  " Used to read a file with the name index_blob_<index hash>_<filename>, for
+  " use by the git editor diff support.
   setlocal noreadonly modifiable
   if !filereadable(expand('%'))
     let path = vcs#util#GetRelativePath()

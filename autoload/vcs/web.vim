@@ -67,10 +67,9 @@ endif
     \ ]
 " }}}
 
-" GetVcsWebFunction(type, func_name) {{{
-" Gets a reference to the proper vcs web function.
-" Ex. let GetLogUrl = vcs#web#GetVcsWebFunction('github', 'GetLogUrl')
-function vcs#web#GetVcsWebFunction(type, func_name)
+function! vcs#web#GetVcsWebFunction(type, func_name) " {{{
+  " Gets a reference to the proper vcs web function.
+  " Ex. let GetLogUrl = vcs#web#GetVcsWebFunction('github', 'GetLogUrl')
   try
     return function('vcs#impl#' . a:type . '#' . a:func_name)
   catch /E700:.*/
@@ -79,8 +78,7 @@ function vcs#web#GetVcsWebFunction(type, func_name)
   endtry
 endfunction " }}}
 
-" VcsWeb(url_func, ...) {{{
-function vcs#web#VcsWeb(url_func, ...)
+function! vcs#web#VcsWeb(url_func, ...) " {{{
   let vcs = vcs#util#GetVcsType()
   if vcs == ''
     return
@@ -170,9 +168,7 @@ function vcs#web#VcsWeb(url_func, ...)
   call vcs#web#OpenUrl(url)
 endfunction " }}}
 
-" VcsWebLog(revision) {{{
-" View the vcs web log.
-function vcs#web#VcsWebLog(revision)
+function! vcs#web#VcsWebLog(revision) " {{{
   let revision = a:revision
   if revision == ''
     let path = exists('b:filename') ? b:filename : expand('%:p')
@@ -182,10 +178,7 @@ function vcs#web#VcsWebLog(revision)
   call vcs#web#VcsWeb('GetLogUrl', revision)
 endfunction " }}}
 
-" VcsWebChangeSet(revision) {{{
-" View the revision info for the supplied or current revision of the
-" current file.
-function vcs#web#VcsWebChangeSet(revision)
+function! vcs#web#VcsWebChangeSet(revision) " {{{
   let revision = a:revision
   if revision == ''
     let path = exists('b:filename') ? b:filename : expand('%:p')
@@ -195,9 +188,7 @@ function vcs#web#VcsWebChangeSet(revision)
   call vcs#web#VcsWeb('GetChangeSetUrl', revision)
 endfunction " }}}
 
-" VcsWebAnnotate(revision) {{{
-" View annotated version of the file.
-function vcs#web#VcsWebAnnotate(revision)
+function! vcs#web#VcsWebAnnotate(revision) " {{{
   let revision = a:revision
   if revision == ''
     let path = vcs#util#GetRelativePath()
@@ -207,9 +198,12 @@ function vcs#web#VcsWebAnnotate(revision)
   call vcs#web#VcsWeb('GetAnnotateUrl', revision)
 endfunction " }}}
 
-" VcsWebDiff(revision1, revision2) {{{
-" View diff between two revisions.
-function vcs#web#VcsWebDiff(...)
+function! vcs#web#VcsWebDiff(...) " {{{
+  " View diff between two revisions.
+  " Optional args:
+  "   revision1
+  "   revision2
+
   let args = a:000
   if len(args) == 1
     let args = split(args[0])
@@ -240,9 +234,7 @@ function vcs#web#VcsWebDiff(...)
   call vcs#web#VcsWeb('GetDiffUrl', revision1, revision2)
 endfunction " }}}
 
-" OpenUrl(url) {{{
-" Opens the supplied url in a web browser.
-function! vcs#web#OpenUrl(url)
+function! vcs#web#OpenUrl(url) " {{{
   if !exists('s:browser') || s:browser == ''
     let s:browser = s:DetermineBrowser()
 
@@ -271,8 +263,7 @@ function! vcs#web#OpenUrl(url)
   endif
 endfunction " }}}
 
-" s:DetermineBrowser() {{{
-function! s:DetermineBrowser()
+function! s:DetermineBrowser() " {{{
   let browser = ''
 
   " user specified a browser, we just need to fill in any gaps if necessary.

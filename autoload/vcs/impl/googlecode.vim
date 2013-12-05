@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -41,8 +41,7 @@ else
   finish
 endif
 
-" GetSettings(origin) {{{
-function vcs#impl#googlecode#GetSettings(origin)
+function! vcs#impl#googlecode#GetSettings(origin) " {{{
   let project = substitute(a:origin, 'https\?://\(.\{-}\)\.googlecode\.com.*', '\1', '')
   let url = 'https://code.google.com/p/' . project
   return {
@@ -52,26 +51,22 @@ function vcs#impl#googlecode#GetSettings(origin)
   \ }
 endfunction " }}}
 
-" GetLogUrl(root, file, args) {{{
-function vcs#impl#googlecode#GetLogUrl(root, file, args)
+function! vcs#impl#googlecode#GetLogUrl(root, file, args) " {{{
   let revision = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
   return a:root . '/source/list?path=' . a:file . '&start=' . revision
 endfunction " }}}
 
-" GetChangeSetUrl(root, file, args) {{{
-function vcs#impl#googlecode#GetChangeSetUrl(root, file, args)
+function! vcs#impl#googlecode#GetChangeSetUrl(root, file, args) " {{{
   let revision = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
   return a:root . '/source/detail?r=' . revision
 endfunction " }}}
 
-" GetAnnotateUrl(root, file, args) {{{
-function vcs#impl#googlecode#GetAnnotateUrl(root, file, args)
+function! vcs#impl#googlecode#GetAnnotateUrl(root, file, args) " {{{
   "let revision = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
   echoe 'Sorry, this function is not yet supported by google code.'
 endfunction " }}}
 
-" GetDiffUrl(root, file, args) {{{
-function vcs#impl#googlecode#GetDiffUrl(root, file, args)
+function! vcs#impl#googlecode#GetDiffUrl(root, file, args) " {{{
   let r1 = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
   let r2 = a:args[1] =~ ':' ? split(a:args[1], ':')[1] : a:args[1]
   if r1 > r2

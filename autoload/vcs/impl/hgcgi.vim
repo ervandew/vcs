@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -41,26 +41,22 @@ else
   finish
 endif
 
-" GetLogUrl(root, file, args) {{{
-function vcs#impl#hgcgi#GetLogUrl(root, file, args)
+function! vcs#impl#hgcgi#GetLogUrl(root, file, args) " {{{
   "return a:root . '/log/' . split(a:args[0], ':')[1] . '/' . a:file
   return a:root . '/log/tip/' . a:file
 endfunction " }}}
 
-" GetChangeSetUrl(root, file, args) {{{
-function vcs#impl#hgcgi#GetChangeSetUrl(root, file, args)
+function! vcs#impl#hgcgi#GetChangeSetUrl(root, file, args) " {{{
   let revision = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
   return a:root . '/rev/' . revision
 endfunction " }}}
 
-" GetAnnotateUrl(root, file, args) {{{
-function vcs#impl#hgcgi#GetAnnotateUrl(root, file, args)
+function! vcs#impl#hgcgi#GetAnnotateUrl(root, file, args) " {{{
   let revision = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
   return a:root . '/annotate/' . revision . '/' . a:file
 endfunction " }}}
 
-" GetDiffUrl(root, file, args) {{{
-function vcs#impl#hgcgi#GetDiffUrl(root, file, args)
+function! vcs#impl#hgcgi#GetDiffUrl(root, file, args) " {{{
   let r1 = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
   " hgcgi doesn't support diffing arbitrary revisions
   "let r2 = a:args[1] =~ ':' ? split(a:args[1], ':')[1] : a:args[1]

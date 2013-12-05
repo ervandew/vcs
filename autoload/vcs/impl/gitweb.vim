@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -43,25 +43,21 @@ endif
 
 " Example url: http://localhost:1234?p=.git
 
-" GetLogUrl(root, file, args) {{{
-function vcs#impl#gitweb#GetLogUrl(root, file, args)
+function! vcs#impl#gitweb#GetLogUrl(root, file, args) " {{{
   "return a:root . ';a=history;f=' . a:file . ';h=' . a:args[0]
   return a:root . ';a=history;f=' . a:file . ';h=HEAD'
 endfunction " }}}
 
-" GetChangeSetUrl(root, file, args) {{{
-function vcs#impl#gitweb#GetChangeSetUrl(root, file, args)
+function! vcs#impl#gitweb#GetChangeSetUrl(root, file, args) " {{{
   return a:root . ';a=commitdiff;h=' . a:args[0]
 endfunction " }}}
 
-" GetAnnotateUrl(root, file, args) Not supported by gitweb {{{
-function vcs#impl#gitweb#GetAnnotateUrl(root, file, args)
+function! vcs#impl#gitweb#GetAnnotateUrl(root, file, args) " {{{
   echoe 'Sorry, this function is not yet supported by gitweb.'
   return
 endfunction " }}}
 
-" GetDiffUrl(root, file, args) {{{
-function vcs#impl#gitweb#GetDiffUrl(root, file, args)
+function! vcs#impl#gitweb#GetDiffUrl(root, file, args) " {{{
   let r1 = a:args[0]
   let r2 = a:args[1]
   return a:root . ';a=blobdiff;f=' . a:file . ';hb=' . r1 . ';hpb=' . r2

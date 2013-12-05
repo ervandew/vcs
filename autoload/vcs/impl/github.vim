@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -41,8 +41,7 @@ else
   finish
 endif
 
-" GetSettings(origin) {{{
-function vcs#impl#github#GetSettings(origin)
+function! vcs#impl#github#GetSettings(origin) " {{{
   if a:origin =~ '^git@github.com'
     let project = substitute(a:origin, 'git@github.com:\(.*\)\.git', '\1', '')
   else
@@ -56,23 +55,19 @@ function vcs#impl#github#GetSettings(origin)
   \ }
 endfunction " }}}
 
-" GetLogUrl(root, file, args) {{{
-function vcs#impl#github#GetLogUrl(root, file, args)
+function! vcs#impl#github#GetLogUrl(root, file, args) " {{{
   return a:root . '/commits/' . a:args[0] . '/' . a:file
 endfunction " }}}
 
-" GetChangeSetUrl(root, file, args) {{{
-function vcs#impl#github#GetChangeSetUrl(root, file, args)
+function! vcs#impl#github#GetChangeSetUrl(root, file, args) " {{{
   return a:root . '/commit/' . a:args[0]
 endfunction " }}}
 
-" GetAnnotateUrl(root, file, args) {{{
-function vcs#impl#github#GetAnnotateUrl(root, file, args)
+function! vcs#impl#github#GetAnnotateUrl(root, file, args) " {{{
   return a:root . '/blame/' . a:args[0] . '/' . a:file
 endfunction " }}}
 
-" GetDiffUrl(root, file, args) Not supported by github {{{
-function vcs#impl#github#GetDiffUrl(root, file, args)
+function! vcs#impl#github#GetDiffUrl(root, file, args) " {{{
   echoe 'Sorry, this function is not yet supported by github. Try using VcsWebChangeSet instead.'
   return
 endfunction " }}}

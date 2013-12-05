@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -41,8 +41,7 @@ else
   finish
 endif
 
-" GetSettings(origin) {{{
-function vcs#impl#bitbucket#GetSettings(origin)
+function! vcs#impl#bitbucket#GetSettings(origin) " {{{
   let project = substitute(a:origin, '.*\<bitbucket\.org/\(.\{-}\)', '\1', '')
   if vcs#util#GetVcsType() == 'git'
     let project = substitute(project, '\.git$', '', '')
@@ -55,25 +54,21 @@ function vcs#impl#bitbucket#GetSettings(origin)
   \ }
 endfunction " }}}
 
-" GetLogUrl(root, file, args) {{{
-function vcs#impl#bitbucket#GetLogUrl(root, file, args)
+function! vcs#impl#bitbucket#GetLogUrl(root, file, args) " {{{
   return a:root . '/history-node/' . a:args[0] . '/' . a:file
 endfunction " }}}
 
-" GetChangeSetUrl(root, file, args) {{{
-function vcs#impl#bitbucket#GetChangeSetUrl(root, file, args)
+function! vcs#impl#bitbucket#GetChangeSetUrl(root, file, args) " {{{
   let revision = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
   return a:root . '/changeset/' . revision
 endfunction " }}}
 
-" GetAnnotateUrl(root, file, args) {{{
-function vcs#impl#bitbucket#GetAnnotateUrl(root, file, args)
+function! vcs#impl#bitbucket#GetAnnotateUrl(root, file, args) " {{{
   let revision = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
   return a:root . '/annotate/' . revision . '/' . a:file
 endfunction " }}}
 
-" GetDiffUrl(root, file, args) {{{
-function vcs#impl#bitbucket#GetDiffUrl(root, file, args)
+function! vcs#impl#bitbucket#GetDiffUrl(root, file, args) " {{{
   let r1 = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
   let r2 = a:args[1] =~ ':' ? split(a:args[1], ':')[1] : a:args[1]
   return a:root . '/diff/' . a:file . '?diff1=' . r1 . '&diff2=' . r2

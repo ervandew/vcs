@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -41,31 +41,27 @@ else
   finish
 endif
 
-" GetLogUrl(root, file, args) {{{
-function vcs#impl#redmine#GetLogUrl(root, file, args)
+function! vcs#impl#redmine#GetLogUrl(root, file, args) " {{{
   let revision = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
   let root = substitute(a:root, '<cmd>', 'changes', '')
   return root . '/' . a:file . '?rev=' . revision
 endfunction " }}}
 
-" GetChangeSetUrl(root, file, args) {{{
-function vcs#impl#redmine#GetChangeSetUrl(root, file, args)
+function! vcs#impl#redmine#GetChangeSetUrl(root, file, args) " {{{
   let revision = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
 " redmine uses a local revision number... how do we handle that?
   let root = substitute(a:root, '<cmd>', 'revision', '')
   return root . '?rev=' . revision
 endfunction " }}}
 
-" GetAnnotateUrl(root, file, args) {{{
-function vcs#impl#redmine#GetAnnotateUrl(root, file, args)
+function! vcs#impl#redmine#GetAnnotateUrl(root, file, args) " {{{
   let revision = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]
 " redmine uses a local revision number... how do we handle that?
   let root = substitute(a:root, '<cmd>', 'annotate', '')
   return root . '/' . a:file . '?rev=' . revision
 endfunction " }}}
 
-" GetDiffUrl(root, file, args) {{{
-function vcs#impl#redmine#GetDiffUrl(root, file, args)
+function! vcs#impl#redmine#GetDiffUrl(root, file, args) " {{{
 " redmine uses a local revision number... how do we handle that?
   let root = substitute(a:root, '<cmd>', 'diff', '')
   let r1 = a:args[0] =~ ':' ? split(a:args[0], ':')[1] : a:args[0]

@@ -54,8 +54,7 @@ endif
   let s:temp_dir = substitute(s:temp_dir, '\', '/', 'g')
 " }}}
 
-" GetVcsType() {{{
-function vcs#util#GetVcsType()
+function! vcs#util#GetVcsType() " {{{
   let path = fnamemodify(vcs#util#GetCurrentPath(), ':h')
   let result_dir = ''
   let result_vcs = ''
@@ -76,10 +75,9 @@ function vcs#util#GetVcsType()
   return result_vcs
 endfunction " }}}
 
-" GetVcsFunction(func_name) {{{
-" Gets a reference to the proper vcs function.
-" Ex. let GetRevision = vcs#util#GetVcsFunction('GetRevision')
-function vcs#util#GetVcsFunction(func_name)
+function! vcs#util#GetVcsFunction(func_name) " {{{
+  " Gets a reference to the proper vcs function.
+  " Ex. let GetRevision = vcs#util#GetVcsFunction('GetRevision')
   let type = vcs#util#GetVcsType()
   if type == ''
     return
@@ -93,9 +91,11 @@ function vcs#util#GetVcsFunction(func_name)
   endtry
 endfunction " }}}
 
-" GetPreviousRevision(path, [revision]) {{{
-" Gets the previous revision of the supplied path.
-function vcs#util#GetPreviousRevision(path, ...)
+function! vcs#util#GetPreviousRevision(path, ...) " {{{
+  " Gets the previous revision of the supplied path.
+  " Optional args:
+  "   revision
+
   let cwd = vcs#util#LcdRoot()
   try
     let GetPreviousRevision = vcs#util#GetVcsFunction('GetPreviousRevision')
@@ -114,9 +114,7 @@ function vcs#util#GetPreviousRevision(path, ...)
   return revision
 endfunction " }}}
 
-" GetRevision(path) {{{
-" Gets the current revision of the current or supplied file.
-function vcs#util#GetRevision(path)
+function! vcs#util#GetRevision(path) " {{{
   let cwd = vcs#util#LcdRoot()
   try
     let GetRevision = vcs#util#GetVcsFunction('GetRevision')
@@ -130,9 +128,8 @@ function vcs#util#GetRevision(path)
   return revision
 endfunction " }}}
 
-" GetRevisions() {{{
-" Gets a list of tags and branches.
-function vcs#util#GetRevisions()
+function! vcs#util#GetRevisions() " {{{
+  " Gets a list of tags and branches.
   let revisions = []
 
   let cwd = vcs#util#LcdRoot()
@@ -148,10 +145,9 @@ function vcs#util#GetRevisions()
   return revisions
 endfunction " }}}
 
-" GetModifiedFiles() {{{
-" Gets a list of modified files, including untracked files that are not
-" ignored.
-function vcs#util#GetModifiedFiles()
+function! vcs#util#GetModifiedFiles() " {{{
+  " Gets a list of modified files, including untracked files that are not
+  " ignored.
   let files = []
 
   let cwd = vcs#util#LcdRoot()
@@ -167,16 +163,14 @@ function vcs#util#GetModifiedFiles()
   return files
 endfunction " }}}
 
-" GetCurrentPath([path]) {{{
-" Get the path of the current or supplied file, accounting for symlinks.
-function vcs#util#GetCurrentPath(...)
+function! vcs#util#GetCurrentPath(...) " {{{
+  " Get the path of the current or supplied file, accounting for symlinks.
   let path = len(a:000) > 0 && a:000[0] != '' ? a:000[0] : expand('%:p')
   return resolve(path)
 endfunction " }}}
 
-" GetRelativePath([path]) {{{
-" Converts the supplied absolute path into a repos relative path.
-function vcs#util#GetRelativePath(...)
+function! vcs#util#GetRelativePath(...) " {{{
+  " Converts the current or supplied absolute path into a repos relative path.
   let path = vcs#util#GetCurrentPath(len(a:000) > 0 ? a:000[0] : '')
   let root = vcs#util#GetRoot(path)
   let path = substitute(path, '\', '/', 'g')
@@ -185,9 +179,8 @@ function vcs#util#GetRelativePath(...)
   return path
 endfunction " }}}
 
-" GetRoot([path]) {{{
-" Gets the absolute path to the repository root on the local file system.
-function vcs#util#GetRoot(...)
+function! vcs#util#GetRoot(...) " {{{
+  " Gets the absolute path to the repository root on the local file system.
   if exists('b:vcs_props') && has_key(b:vcs_props, 'root_dir')
     return b:vcs_props.root_dir
   endif
@@ -213,9 +206,9 @@ function vcs#util#GetRoot(...)
   return root
 endfunction " }}}
 
-" GetInfo(dir) {{{
-" Gets some displayable info for the specified vcs directory (branch info, etc.)
-function vcs#util#GetInfo(dir)
+function! vcs#util#GetInfo(dir) " {{{
+  " Gets some displayable info for the specified vcs directory (branch info,
+  " etc.)
   let info = ''
 
   let cwd = getcwd()
@@ -235,8 +228,7 @@ function vcs#util#GetInfo(dir)
   return info
 endfunction " }}}
 
-" GetSettings() {{{
-function vcs#util#GetSettings()
+function! vcs#util#GetSettings() " {{{
   let vcs_root = vcs#util#GetRoot()
   if vcs_root =~ '/$'
     let vcs_root = vcs_root[:-2]
@@ -270,9 +262,8 @@ function vcs#util#GetSettings()
   return {}
 endfunction " }}}
 
-" LcdRoot([path]) {{{
-" lcd to the vcs root and return the previous working directory.
-function vcs#util#LcdRoot(...)
+function! vcs#util#LcdRoot(...) " {{{
+  " lcd to the vcs root and return the previous working directory.
   let cwd = getcwd()
   let path = vcs#util#GetCurrentPath(len(a:000) > 0 ? a:000[0] : '')
   let root = vcs#util#GetRoot(path)
@@ -280,9 +271,11 @@ function vcs#util#LcdRoot(...)
   return escape(cwd, ' ')
 endfunction " }}}
 
-" Vcs(cmd, args [, exec]) {{{
-" Executes the supplied vcs command with the supplied args.
-function vcs#util#Vcs(cmd, args, ...)
+function! vcs#util#Vcs(cmd, args, ...) " {{{
+  " Executes the supplied vcs command with the supplied args.
+  " Optional args:
+  "   exec: non-0 to run the command using exec
+
   if !executable(a:cmd)
     call vcs#util#EchoError(a:cmd . ' executable not found in your path.')
     return
@@ -304,23 +297,19 @@ function vcs#util#Vcs(cmd, args, ...)
   return result
 endfunction " }}}
 
-" Echo(message) {{{
-function! vcs#util#Echo(message)
+function! vcs#util#Echo(message) " {{{
   call s:Echo(a:message, 'Statement')
 endfunction " }}}
 
-" EchoWarning(message) {{{
-function! vcs#util#EchoWarning(message)
+function! vcs#util#EchoWarning(message) " {{{
   call s:Echo(a:message, 'WarningMsg')
 endfunction " }}}
 
-" EchoError(message) {{{
-function! vcs#util#EchoError(message)
+function! vcs#util#EchoError(message) " {{{
   call s:Echo(a:message, 'Error')
 endfunction " }}}
 
-" s:EchoLevel(message) {{{
-function! s:Echo(message, highlight)
+function! s:Echo(message, highlight) " {{{
   " only echo if the result is not 0, which is most likely the result of an
   " error.
   if a:message != "0"
@@ -333,11 +322,11 @@ function! s:Echo(message, highlight)
   endif
 endfunction " }}}
 
-" WideMessage(command, message) {{{
-" Executes the supplied echo command and forces vim to display as much as
-" possible without the "Press Enter" prompt.
-" Thanks to vimtip #1289
-function! vcs#util#WideMessage(command, message)
+function! vcs#util#WideMessage(command, message) " {{{
+  " Executes the supplied echo command and forces vim to display as much as
+  " possible without the "Press Enter" prompt.
+  " Thanks to vimtip #1289
+
   let saved_ruler = &ruler
   let saved_showcmd = &showcmd
 
@@ -357,10 +346,10 @@ function! vcs#util#WideMessage(command, message)
   let &showcmd = saved_showcmd
 endfunction " }}}
 
-" PromptConfirm(prompt) {{{
-" Creates a yes/no prompt for the user using the supplied prompt string.
-" Returns -1 if the user canceled, otherwise 1 for yes, and 0 for no.
-function! vcs#util#PromptConfirm(prompt)
+function! vcs#util#PromptConfirm(prompt) " {{{
+  " Creates a yes/no prompt for the user using the supplied prompt string.
+  " Returns -1 if the user canceled, otherwise 1 for yes, and 0 for no.
+
   echohl Statement
   try
     " clear any previous messages
@@ -381,11 +370,11 @@ function! vcs#util#PromptConfirm(prompt)
   return response =~ '\c\s*\(y\(es\)\?\)\s*'
 endfunction " }}}
 
-" PromptList(prompt, list) {{{
-" Creates a prompt for the user using the supplied prompt string and list of
-" items to choose from.  Returns -1 if the list is empty or if the user
-" canceled, and 0 if the list contains only one item.
-function! vcs#util#PromptList(prompt, list)
+function! vcs#util#PromptList(prompt, list) " {{{
+  " Creates a prompt for the user using the supplied prompt string and list of
+  " items to choose from.  Returns -1 if the list is empty or if the user
+  " canceled, and 0 if the list contains only one item.
+
   " no elements, no prompt
   if empty(a:list)
     return -1
@@ -428,10 +417,9 @@ function! vcs#util#PromptList(prompt, list)
   return response
 endfunction " }}}
 
-" GoToBufferWindow(buf) {{{
-" Focuses the window containing the supplied buffer name or buffer number.
-" Returns 1 if the window was found, 0 otherwise.
-function! vcs#util#GoToBufferWindow(buf)
+function! vcs#util#GoToBufferWindow(buf) " {{{
+  " Focuses the window containing the supplied buffer name or buffer number.
+  " Returns 1 if the window was found, 0 otherwise.
   if type(a:buf) == 0
     let winnr = bufwinnr(a:buf)
   else
@@ -445,10 +433,9 @@ function! vcs#util#GoToBufferWindow(buf)
   return 0
 endfunction " }}}
 
-" GoToBufferWindowOrOpen(name, cmd) {{{
-" Gives focus to the window containing the buffer for the supplied file, or if
-" none, opens the file using the supplied command.
-function! vcs#util#GoToBufferWindowOrOpen(name, cmd)
+function! vcs#util#GoToBufferWindowOrOpen(name, cmd) " {{{
+  " Gives focus to the window containing the buffer for the supplied file, or
+  " if none, opens the file using the supplied command.
   let name = vcs#util#EscapeBufferName(a:name)
   let winnr = bufwinnr(bufnr('^' . name))
   if winnr != -1
@@ -465,19 +452,17 @@ function! vcs#util#GoToBufferWindowOrOpen(name, cmd)
   endif
 endfunction " }}}
 
-" GoToBufferWindowRegister(buf) {{{
-" Registers the autocmd for returning the user to the supplied buffer when the
-" current buffer is closed.
-function! vcs#util#GoToBufferWindowRegister(buf)
+function! vcs#util#GoToBufferWindowRegister(buf) " {{{
+  " Registers the autocmd for returning the user to the supplied buffer when
+  " the current buffer is closed.
   exec 'autocmd BufWinLeave <buffer> ' .
     \ 'call vcs#util#GoToBufferWindow("' . escape(a:buf, '\') . '") | ' .
     \ 'doautocmd BufEnter'
 endfunction " }}}
 
-" EscapeBufferName(name) {{{
-" Escapes the supplied buffer name so that it can be safely used by buf*
-" functions.
-function! vcs#util#EscapeBufferName(name)
+function! vcs#util#EscapeBufferName(name) " {{{
+  " Escapes the supplied buffer name so that it can be safely used by buf*
+  " functions.
   let name = a:name
   " escaping the space in cygwin could lead to the dos path error message that
   " cygwin throws when a dos path is referenced.
@@ -487,10 +472,9 @@ function! vcs#util#EscapeBufferName(name)
   return substitute(name, '\(.\{-}\)\[\(.\{-}\)\]\(.\{-}\)', '\1[[]\2[]]\3', 'g')
 endfunction " }}}
 
-" ParseArgs(args) {{{
-" Parses the supplied argument line into a list of args, handling quoted
-" strings, escaped spaces, etc.
-function! vcs#util#ParseArgs(args)
+function! vcs#util#ParseArgs(args) " {{{
+  " Parses the supplied argument line into a list of args, handling quoted
+  " strings, escaped spaces, etc.
   let args = []
   let arg = ''
   let quote = ''
@@ -538,9 +522,7 @@ function! vcs#util#ParseArgs(args)
   return args
 endfunction " }}}
 
-" GetDefinedSigns() {{{
-" Gets a list of defined sign names.
-function! vcs#util#GetDefinedSigns()
+function! vcs#util#GetDefinedSigns() " {{{
   redir => list
   silent exec 'sign list'
   redir END
@@ -553,15 +535,16 @@ function! vcs#util#GetDefinedSigns()
   return names
 endfunction " }}}
 
-" GetExistingSigns() {{{
-" Gets a list of existing signs for the current buffer.
-" The list consists of dictionaries with the following keys:
-"   id:   The sign id.
-"   line: The line number.
-"   name: The sign name (erorr, warning, etc.)
-"
-" Optionally a sign name may be supplied to only retrieve signs of that name.
-function! vcs#util#GetExistingSigns(...)
+function! vcs#util#GetExistingSigns(...) " {{{
+  " Gets a list of existing signs for the current buffer.
+  " The list consists of dictionaries with the following keys:
+  "   id:   The sign id.
+  "   line: The line number.
+  "   name: The sign name (erorr, warning, etc.)
+  "
+  " Optionally a sign name may be supplied to only retrieve signs of that
+  " name.
+
   let bufnr = bufnr('%')
 
   redir => signs
@@ -582,21 +565,15 @@ function! vcs#util#GetExistingSigns(...)
   return existing
 endfunction " }}}
 
-" DefineSign(name, text) {{{
-" Defines a new sign name or updates an existing one.
-function! vcs#util#DefineSign(name, text)
+function! vcs#util#DefineSign(name, text) " {{{
   exec "sign define " . a:name . " text=" . a:text . " texthl=Statement"
 endfunction " }}}
 
-" UndefineSign(name) {{{
-" Undefines a sign name.
-function! vcs#util#UndefineSign(name)
+function! vcs#util#UndefineSign(name) " {{{
   exec "sign undefine " . a:name
 endfunction " }}}
 
-" PlaceSign(name, line) {{{
-" Places a sign in the current buffer.
-function! vcs#util#PlaceSign(name, line)
+function! vcs#util#PlaceSign(name, line) " {{{
   if a:line > 0
     let lastline = line('$')
     let line = a:line <= lastline ? a:line : lastline
@@ -605,14 +582,11 @@ function! vcs#util#PlaceSign(name, line)
   endif
 endfunction " }}}
 
-" UnplaceSign(id) {{{
-" Un-places a sign in the current buffer.
-function! vcs#util#UnplaceSign(id)
+function! vcs#util#UnplaceSign(id) " {{{
   exec 'sign unplace ' . a:id . ' buffer=' . bufnr('%')
 endfunction " }}}
 
-" s:ParseSign(raw) {{{
-function! s:ParseSign(raw)
+function! s:ParseSign(raw) " {{{
   let attrs = split(a:raw)
 
   exec 'let line = ' . split(attrs[0], '=')[1]
@@ -633,9 +607,11 @@ function! s:ParseSign(raw)
   return {'id': id, 'line': line, 'name': name}
 endfunction " }}}
 
-" System(cmd, [exec, exec_results]) {{{
-" Executes system() accounting for possibly disruptive vim options.
-function! vcs#util#System(cmd, ...)
+function! vcs#util#System(cmd, ...) " {{{
+  " Executes system() accounting for possibly disruptive vim options.
+  " Optional args:
+  "   exec: non-0 to run the command using exec
+  "   exec_results: non-0 to return the output from the exec command
   let saveshell = &shell
   let saveshellcmdflag = &shellcmdflag
   let saveshellpipe = &shellpipe
@@ -709,8 +685,7 @@ function! vcs#util#System(cmd, ...)
   return [v:shell_error, result]
 endfunction " }}}
 
-" s:Cygpath(path) {{{
-function! s:Cygpath(path)
+function! s:Cygpath(path) " {{{
   if executable('cygpath')
     let path = substitute(a:path, '\', '/', 'g')
     let [error, path] = vcs#util#System('cygpath "' . path . '"')
@@ -720,9 +695,7 @@ function! s:Cygpath(path)
   return a:path
 endfunction " }}}
 
-" CommandCompleteRevision(argLead, cmdLine, cursorPos) {{{
-" Custom command completion for revisions.
-function! vcs#util#CommandCompleteRevision(argLead, cmdLine, cursorPos)
+function! vcs#util#CommandCompleteRevision(argLead, cmdLine, cursorPos) " {{{
   let cmdLine = strpart(a:cmdLine, 0, a:cursorPos)
   let args = split(cmdLine, '[^\\]\s\zs')
   call map(args, 'substitute(v:val, "\\([^\\\\]\\)\\s\\+$", "\\1", "")')

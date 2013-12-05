@@ -5,7 +5,7 @@
 "
 " License:
 "
-" Copyright (C) 2005 - 2010  Eric Van Dewoestine
+" Copyright (C) 2005 - 2013  Eric Van Dewoestine
 "
 " This program is free software: you can redistribute it and/or modify
 " it under the terms of the GNU General Public License as published by
@@ -22,16 +22,14 @@
 "
 " }}}
 
-" SetUp() {{{
-function! SetUp()
+function! SetUp() " {{{
   let s:test_dir = 'build/test/temp/mercurial/unittest/test'
   exec 'cd ' . s:test_dir
   set expandtab
   set shiftwidth=2 tabstop=2
 endfunction " }}}
 
-" TestInfo() {{{
-function! TestInfo()
+function! TestInfo() " {{{
   view file1.txt
   call vunit#PushRedir('@"')
   VcsInfo
@@ -43,8 +41,7 @@ function! TestInfo()
   call vunit#AssertEquals(info[3], 'summary:     test a multi line comment')
 endfunction " }}}
 
-" TestAnnotate() {{{
-function! TestAnnotate()
+function! TestAnnotate() " {{{
   view file1.txt
   call vunit#PeekRedir()
   call vunit#PushRedir('@"')
@@ -85,8 +82,7 @@ function! TestAnnotate()
   call vunit#AssertEquals(len(existing), 0)
 endfunction " }}}
 
-" TestDiff() {{{
-function! TestDiff()
+function! TestDiff() " {{{
   view file1.txt
   call vunit#PeekRedir()
   VcsDiff
@@ -100,8 +96,7 @@ function! TestDiff()
   call vunit#AssertEquals(line('$'), 4)
 endfunction " }}}
 
-" TestLog() {{{
-function! TestLog()
+function! TestLog() " {{{
   view file1.txt
   call vunit#PeekRedir()
   VcsLog
@@ -179,8 +174,7 @@ function! TestLog()
   call vunit#AssertEquals(line('$'), 2)
 endfunction " }}}
 
-" TestLogFiles() {{{
-function! TestLogFiles()
+function! TestLogFiles() " {{{
   view file2.txt
   call vunit#PeekRedir()
   VcsLog
@@ -230,8 +224,7 @@ function! TestLogFiles()
   bdelete
 endfunction " }}}
 
-" TestLogGrepMessage() {{{
-function! TestLogGrepMessage()
+function! TestLogGrepMessage() " {{{
   view file1.txt
   call vunit#PeekRedir()
   VcsLogGrepMessage second\ revision
@@ -261,8 +254,7 @@ function! TestLogGrepMessage()
   call vunit#AssertEquals(line('$'), 5)
 endfunction " }}}
 
-" TestLogGrepFiles() {{{
-function! TestLogGrepFiles()
+function! TestLogGrepFiles() " {{{
   view file1.txt
   call vunit#PeekRedir()
   VcsLogGrepFiles (second|third)\ revision

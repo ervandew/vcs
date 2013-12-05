@@ -46,8 +46,7 @@ endif
   let s:path = substitute(expand('<sfile>:h'), '\', '/', 'g')
 " }}}
 
-" GetAnnotations(path, revision) {{{
-function! vcs#impl#hg#GetAnnotations(path, revision)
+function! vcs#impl#hg#GetAnnotations(path, revision) " {{{
   let cmd = 'annotate -uncd'
   if a:revision != ''
     let revision = substitute(a:revision, '.*:', '', '')
@@ -65,8 +64,10 @@ function! vcs#impl#hg#GetAnnotations(path, revision)
   return annotations
 endfunction " }}}
 
-" GetPreviousRevision(path, [revision]) {{{
-function vcs#impl#hg#GetPreviousRevision(path, ...)
+function! vcs#impl#hg#GetPreviousRevision(path, ...) " {{{
+  " Optional args:
+  "   revision
+
   let cmd = 'log -f -q --template "{node|short}\n"'
   if len(a:000) > 0 && a:000[0] != ''
     let cmd .= ' -r' . a:000[0] . ':1'
@@ -79,8 +80,7 @@ function vcs#impl#hg#GetPreviousRevision(path, ...)
   return len(revisions) > 1 ? revisions[1] : 0
 endfunction " }}}
 
-" GetRevision(path) {{{
-function vcs#impl#hg#GetRevision(path)
+function! vcs#impl#hg#GetRevision(path) " {{{
   let log = vcs#impl#hg#Hg('log -f -q --template "{node|short}\n" --limit 1 "' . a:path . '"')
   if type(log) == 0
     return
@@ -88,8 +88,7 @@ function vcs#impl#hg#GetRevision(path)
   return substitute(log, '\n', '', '')
 endfunction " }}}
 
-" GetRevisions() {{{
-function vcs#impl#hg#GetRevisions()
+function! vcs#impl#hg#GetRevisions() " {{{
   let revs = []
 
   let result = vcs#impl#hg#Hg('tags')
@@ -110,13 +109,11 @@ function vcs#impl#hg#GetRevisions()
   return revs
 endfunction " }}}
 
-" GetOrigin() {{{
-function vcs#impl#hg#GetOrigin()
+function! vcs#impl#hg#GetOrigin() " {{{
   return substitute(vcs#impl#hg#Hg('showconfig paths.default'), '\n$', '', '')
 endfunction " }}}
 
-" GetRoot() {{{
-function vcs#impl#hg#GetRoot()
+function! vcs#impl#hg#GetRoot() " {{{
   let root = vcs#impl#hg#Hg('root')
   if type(root) == 0
     return
@@ -126,8 +123,7 @@ function vcs#impl#hg#GetRoot()
   return root
 endfunction " }}}
 
-" GetInfo() {{{
-function vcs#impl#hg#GetInfo()
+function! vcs#impl#hg#GetInfo() " {{{
   let branch = substitute(vcs#impl#hg#Hg('branch'), '\n$', '', '')
   if branch == '0'
     return ''
@@ -141,8 +137,7 @@ function vcs#impl#hg#GetInfo()
   return info
 endfunction " }}}
 
-" GetEditorFile() {{{
-function vcs#impl#hg#GetEditorFile()
+function! vcs#impl#hg#GetEditorFile() " {{{
   let line = getline('.')
   let file = ''
   if line =~ '^HG: changed .*'
@@ -153,15 +148,13 @@ function vcs#impl#hg#GetEditorFile()
   return file
 endfunction " }}}
 
-" GetModifiedFiles() {{{
-function vcs#impl#hg#GetModifiedFiles()
+function! vcs#impl#hg#GetModifiedFiles() " {{{
   let status = vcs#impl#hg#Hg('status -m -a -u -n')
   let root = vcs#impl#hg#GetRoot()
   return map(split(status, "\n"), 'root . "/" . v:val')
 endfunction " }}}
 
-" Info(path) {{{
-function vcs#impl#hg#Info(path)
+function! vcs#impl#hg#Info(path) " {{{
   let result = vcs#impl#hg#Hg('log -f --limit 1 "' . a:path . '"')
   if type(result) == 0
     return
@@ -169,8 +162,10 @@ function vcs#impl#hg#Info(path)
   call vcs#util#Echo(result)
 endfunction " }}}
 
-" Log(args [, exec]) {{{
-function vcs#impl#hg#Log(args, ...)
+function! vcs#impl#hg#Log(args, ...) " {{{
+  " Optional args:
+  "   exec: non-0 to run the command with exec
+
   " Note: tags are space separated, so if the user has a space in their tag
   " name, that tag will be screwed in the log.
   let logcmd = 'log -f --template "{node|short}|{author}|{date|age}|{tags}|{desc|firstline}\n"'
@@ -202,8 +197,7 @@ function vcs#impl#hg#Log(args, ...)
   return {'log': log, 'props': {'root_dir': root_dir}}
 endfunction " }}}
 
-" LogGrep(pattern, args, type) {{{
-function vcs#impl#hg#LogGrep(pattern, args, type)
+function! vcs#impl#hg#LogGrep(pattern, args, type) " {{{
   if a:type == 'files'
     let result = vcs#impl#hg#Hg('grep --all "' . a:pattern . '" ' . a:args, 1)
     if type(result) == 0
@@ -227,8 +221,7 @@ function vcs#impl#hg#LogGrep(pattern, args, type)
   return vcs#impl#hg#Log('-k "' . a:pattern . '" ' . a:args, 1)
 endfunction " }}}
 
-" LogDetail(revision) {{{
-function vcs#impl#hg#LogDetail(revision)
+function! vcs#impl#hg#LogDetail(revision) " {{{
   let logcmd = 'log "--template=' .
     \ '{node|short}|{author}|{date|age}|{date|isodate}|{tags}|{desc|firstline}|{desc}"'
   let result = vcs#impl#hg#Hg(logcmd . ' -r ' . a:revision)
@@ -247,8 +240,7 @@ function vcs#impl#hg#LogDetail(revision)
    \ }
 endfunction " }}}
 
-" LogFiles(revision) {{{
-function vcs#impl#hg#LogFiles(revision)
+function! vcs#impl#hg#LogFiles(revision) " {{{
   let logcmd = 'log --copies "--style=' . s:path .  '/hg_log_files.style" '
   let result = vcs#impl#hg#Hg(logcmd . '-r ' . a:revision)
   if type(result) == 0
@@ -279,16 +271,15 @@ function vcs#impl#hg#LogFiles(revision)
   return files
 endfunction " }}}
 
-" ViewFileRevision(path, revision) {{{
-function! vcs#impl#hg#ViewFileRevision(path, revision)
+function! vcs#impl#hg#ViewFileRevision(path, revision) " {{{
   let revision = substitute(a:revision, '.\{-}:', '', '')
   let result = vcs#impl#hg#Hg('cat -r ' . revision . ' "' . a:path . '"')
   return split(result, '\n')
 endfunction " }}}
 
-" Hg(args [, exec]) {{{
-" Executes 'hg' with the supplied args.
-function vcs#impl#hg#Hg(args, ...)
+function! vcs#impl#hg#Hg(args, ...) " {{{
+  " Optional args:
+  "   exec: non-0 to run the command with exec
   let exec = len(a:000) > 0 && a:000[0]
   return vcs#util#Vcs('hg', a:args, exec)
 endfunction " }}}

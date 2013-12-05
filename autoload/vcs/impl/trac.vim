@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2010, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -41,24 +41,20 @@ else
   finish
 endif
 
-" GetLogUrl(root, file, args) {{{
-function vcs#impl#trac#GetLogUrl(root, file, args)
+function! vcs#impl#trac#GetLogUrl(root, file, args) " {{{
   return a:root . '/log/' . a:file . '?verbose=on'
 endfunction " }}}
 
-" GetChangeSetUrl(root, file, args) {{{
-function vcs#impl#trac#GetChangeSetUrl(root, file, args)
+function! vcs#impl#trac#GetChangeSetUrl(root, file, args) " {{{
   return a:root . '/changeset/' . a:args[0]
 endfunction " }}}
 
-" GetAnnotateUrl(root, file, args) {{{
-function vcs#impl#trac#GetAnnotateUrl(root, file, args)
+function! vcs#impl#trac#GetAnnotateUrl(root, file, args) " {{{
   let path = substitute(a:file, '/', '%2F', 'g')
   return a:root . '/' . a:file . '?annotate=1&rev=' . a:args[0]
 endfunction " }}}
 
-" GetDiffUrl(root, file, args) {{{
-function vcs#impl#trac#GetDiffUrl(root, file, args)
+function! vcs#impl#trac#GetDiffUrl(root, file, args) " {{{
   let path = substitute(a:file, '/', '%2F', 'g')
   let r1 = path . '%40' . a:args[0]
   let r2 = path . '%40' . a:args[1]
