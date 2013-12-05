@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -350,7 +350,7 @@ endfunction " }}}
 function! s:ReadIndex()
   setlocal noreadonly modifiable
   if !filereadable(expand('%'))
-    let path = vcs#util#GetRelativePath(expand('%:p'))
+    let path = vcs#util#GetRelativePath()
     let path = substitute(path, '^/', '', '')
     let root = vcs#impl#git#GetRoot()
     exec 'lcd ' . escape(root, ' ')

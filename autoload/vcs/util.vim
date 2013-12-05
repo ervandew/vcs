@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2012, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -56,11 +56,11 @@ endif
 
 " GetVcsType() {{{
 function vcs#util#GetVcsType()
-  let cwd = escape(getcwd(), ' ')
+  let path = fnamemodify(vcs#util#GetCurrentPath(), ':h')
   let result_dir = ''
   let result_vcs = ''
   for [type, dir] in items(s:types)
-    let vcsdir = finddir(dir, cwd . ';')
+    let vcsdir = finddir(dir, path . ';')
     if vcsdir != ''
       let vcsdir = fnamemodify(vcsdir, ':p')
       if result_dir == '' || len(vcsdir) > len(result_dir)
@@ -71,7 +71,7 @@ function vcs#util#GetVcsType()
   endfor
 
   if result_dir != ''
-      exec 'runtime autoload/vcs/impl/' . result_vcs . '.vim'
+    exec 'runtime autoload/vcs/impl/' . result_vcs . '.vim'
   endif
   return result_vcs
 endfunction " }}}
@@ -167,11 +167,19 @@ function vcs#util#GetModifiedFiles()
   return files
 endfunction " }}}
 
-" GetRelativePath(path) {{{
+" GetCurrentPath([path]) {{{
+" Get the path of the current or supplied file, accounting for symlinks.
+function vcs#util#GetCurrentPath(...)
+  let path = len(a:000) > 0 && a:000[0] != '' ? a:000[0] : expand('%:p')
+  return resolve(path)
+endfunction " }}}
+
+" GetRelativePath([path]) {{{
 " Converts the supplied absolute path into a repos relative path.
-function vcs#util#GetRelativePath(path)
-  let root = vcs#util#GetRoot(a:path)
-  let path = substitute(a:path, '\', '/', 'g')
+function vcs#util#GetRelativePath(...)
+  let path = vcs#util#GetCurrentPath(len(a:000) > 0 ? a:000[0] : '')
+  let root = vcs#util#GetRoot(path)
+  let path = substitute(path, '\', '/', 'g')
   let path = substitute(path, '^' . root, '', '')
   let path = substitute(path, '^/', '', '')
   return path
@@ -187,7 +195,7 @@ function vcs#util#GetRoot(...)
   let root = ''
 
   let cwd = getcwd()
-  let path = len(a:000) > 0 && a:000[0] != '' ? a:000[0] : expand('%:p')
+  let path = vcs#util#GetCurrentPath(len(a:000) > 0 ? a:000[0] : '')
   if !isdirectory(path)
     let path = fnamemodify(path, ':h')
   endif
@@ -211,7 +219,7 @@ function vcs#util#GetInfo(dir)
   let info = ''
 
   let cwd = getcwd()
-  let dir = a:dir == '' ? expand('%:p:h') : a:dir
+  let dir = a:dir == '' ? fnamemodify(vcs#util#GetCurrentPath(), ':h') : a:dir
   exec 'lcd ' . escape(dir, ' ')
   try
     let GetInfo = vcs#util#GetVcsFunction('GetInfo')
@@ -266,7 +274,7 @@ endfunction " }}}
 " lcd to the vcs root and return the previous working directory.
 function vcs#util#LcdRoot(...)
   let cwd = getcwd()
-  let path = len(a:000) > 0 ? a:000[0] : expand('%:p')
+  let path = vcs#util#GetCurrentPath(len(a:000) > 0 ? a:000[0] : '')
   let root = vcs#util#GetRoot(path)
   exec 'lcd ' . escape(root, ' ')
   return escape(cwd, ' ')

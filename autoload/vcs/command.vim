@@ -64,7 +64,7 @@ function! vcs#command#Annotate(...)
   endif
 
   let path = exists('b:vcs_props') ? b:vcs_props.path :
-    \ vcs#util#GetRelativePath(expand('%:p'))
+    \ vcs#util#GetRelativePath()
   let revision = len(a:000) > 0 ? a:000[0] : ''
 
   " let the vcs annotate the current working version so that the results line
@@ -97,7 +97,7 @@ function! vcs#command#Diff(revision, ...)
   "         default.
 
   let path = expand('%:p')
-  let relpath = vcs#util#GetRelativePath(expand('%:p'))
+  let relpath = vcs#util#GetRelativePath()
   let revision = a:revision
   if revision == ''
     let revision = vcs#util#GetRevision(relpath)
@@ -135,7 +135,7 @@ endfunction " }}}
 " Info() {{{
 " Retrieves and echos info on the current file.
 function! vcs#command#Info()
-  let path = vcs#util#GetRelativePath(expand('%:p'))
+  let path = vcs#util#GetRelativePath()
   let cwd = vcs#util#LcdRoot()
   try
     let Info = vcs#util#GetVcsFunction('Info')
@@ -152,7 +152,7 @@ endfunction " }}}
 function! vcs#command#Log(args)
   let cwd = vcs#util#LcdRoot()
   let args = a:args
-  let path = a:args == '' ? vcs#util#GetRelativePath(expand('%')) : ''
+  let path = a:args == '' ? vcs#util#GetRelativePath() : ''
   try
     let Log = vcs#util#GetVcsFunction('Log')
     if type(Log) != 2
@@ -164,7 +164,7 @@ function! vcs#command#Log(args)
     let percent_index = index(arglist, '%')
     if percent_index != -1
       call remove(arglist, percent_index)
-      let path = vcs#util#GetRelativePath(expand('%'))
+      let path = vcs#util#GetRelativePath()
       let args = '"' . join(arglist, '" "') . '" '
     endif
 
@@ -243,7 +243,7 @@ function! vcs#command#LogGrep(args, type)
     " handle user supplied % arg
     let percent_index = index(arglist, '%')
     if percent_index != -1
-      let arglist[percent_index] = vcs#util#GetRelativePath(expand('%'))
+      let arglist[percent_index] = vcs#util#GetRelativePath()
     endif
     let args = len(arglist) ? '"' . join(arglist, '" "') . '"' : ''
     let info = LogGrep(pattern, args, a:type)
@@ -670,7 +670,7 @@ endfunction " }}}
 function! s:GetProps()
   return {
       \ 'root_dir': vcs#util#GetRoot(),
-      \ 'path': vcs#util#GetRelativePath(expand('%:p')),
+      \ 'path': vcs#util#GetRelativePath(),
     \ }
 endfunction " }}}
 

@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2011, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -200,7 +200,7 @@ endfunction " }}}
 function vcs#web#VcsWebAnnotate(revision)
   let revision = a:revision
   if revision == ''
-    let path = vcs#util#GetRelativePath(expand('%:p'))
+    let path = vcs#util#GetRelativePath()
     let revision = vcs#util#GetRevision(path)
   endif
 
@@ -220,7 +220,7 @@ function vcs#web#VcsWebDiff(...)
     return
   endif
 
-  let path = vcs#util#GetRelativePath(expand('%:p'))
+  let path = vcs#util#GetRelativePath()
   let revision1 = len(args) > 0 ? args[0] : ''
   if revision1 == ''
     let revision1 = vcs#util#GetRevision(path)
