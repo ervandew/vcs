@@ -1,7 +1,11 @@
 SHELL=/bin/bash
 TEMP := $(shell mktemp)
 
-all:
+.PHONY: test
+
+all: test dist
+
+test:
 	@vim -c "redir! > $(TEMP) | echo findfile('autoload/vunit.vim', escape(&rtp, ' ')) | quit"
 	@if [ -n "$$(cat $(TEMP))" ] ; then \
 			vunit=$$(dirname $$(dirname $$(cat $(TEMP)))) ; \
