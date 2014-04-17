@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2014, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -329,6 +329,49 @@ function! vcs#command#ViewFileRevision(path, revision, open_cmd) " {{{
   let b:vcs_props = copy(props)
 endfunction " }}}
 
+function! vcs#command#ViewCommitPatch(revision) " {{{
+  let cwd = vcs#util#LcdRoot()
+  try
+    " load in content
+    let ViewCommitPatch = vcs#util#GetVcsFunction('ViewCommitPatch')
+    if type(ViewCommitPatch) != 2
+      return
+    endif
+    let lines = ViewCommitPatch(a:revision)
+  finally
+    exec 'lcd ' . cwd
+  endtry
+
+  let props = exists('b:vcs_props') ? b:vcs_props : s:GetProps()
+  if exists('b:filename')
+    let result = vcs#util#GoToBufferWindow(b:filename)
+    if !result && exists('b:winnr')
+      exec b:winnr . 'winc w'
+    endif
+  endif
+
+  let vcs_file = 'vcs_' . a:revision
+  call vcs#util#GoToBufferWindowOrOpen(vcs_file, 'split')
+
+  setlocal ft=patch
+  setlocal noreadonly
+  setlocal modifiable
+  silent 1,$delete _
+  call append(1, lines)
+  silent 1,1delete
+  call cursor(1, 1)
+  setlocal nomodified
+  setlocal readonly
+  setlocal nomodifiable
+  setlocal noswapfile
+  setlocal nobuflisted
+  setlocal buftype=nofile
+  setlocal bufhidden=delete
+  doautocmd BufReadPost
+
+  let b:vcs_props = props
+endfunction " }}}
+
 function! s:ApplyAnnotations(annotations) " {{{
   let existing = {}
   let existing_annotations = {}
@@ -444,8 +487,10 @@ endfunction " }}}
 function! s:Action() " {{{
   try
     let line = getline('.')
+    let link = substitute(
+      \ getline('.'), '.*|\(.\{-}\%' . col('.') . 'c.\{-}\)|.*', '\1', '')
 
-    if line =~ '^\s\+[+-] files$'
+    if link == line && line =~ '^\s\+[+-] files\>.*$'
       call s:ToggleFiles()
       return
     endif
@@ -455,14 +500,17 @@ function! s:Action() " {{{
       return
     endif
 
-    let link = substitute(
-      \ getline('.'), '.*|\(.\{-}\%' . col('.') . 'c.\{-}\)|.*', '\1', '')
     if link == line
       return
     endif
 
+    " link to commit patch
+    if link == 'view patch'
+      let revision = s:GetRevision()
+      call vcs#command#ViewCommitPatch(revision)
+
     " link to view / annotate a file
-    if link == 'view' || link == 'annotate'
+    elseif link == 'view' || link == 'annotate'
       let file = s:GetFilePath()
       let revision = s:GetRevision()
 
@@ -599,7 +647,7 @@ function! s:ToggleDetail() " {{{
     let desc = substitute(desc, '\('. s:trackerIdPattern . '\)', '|\1|', 'g')
     let lines += map(split(desc, "\n"), '(v:val != "" ? "\t" : "") . v:val')
     call add(lines, '')
-    call add(lines, "\t+ files")
+    call add(lines, "\t+ files |view patch|")
     call append(lnum, lines)
     retab
   else
@@ -711,7 +759,7 @@ function! s:LogSyntax() " {{{
   syntax match VcsRefs /\(^[+-] \w\+ \)\@<=(.\{-})/
   syntax match VcsDate /\(^[+-] \w\+ \((.\{-}) \)\?\w.\{-}\)\@<=(\d.\{-})/
   syntax match VcsLink /|\S.\{-}|/
-  exec 'syntax match VcsFiles /\(^\s\+[+-] \)\@<=files$/'
+  exec 'syntax match VcsFiles /\(^\s\+[+-] \)\@<=files\>/'
 endfunction " }}}
 
 function! s:TempWindow(props, lines) " {{{

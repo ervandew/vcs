@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2014, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -316,6 +316,11 @@ function! vcs#impl#git#ViewFileRevision(path, revision) " {{{
   endif
 
   let result = vcs#impl#git#Git('show "' . a:revision . ':' . path . '"')
+  return split(result, '\n')
+endfunction " }}}
+
+function! vcs#impl#git#ViewCommitPatch(revision) " {{{
+  let result = vcs#impl#git#Git('log -1 -p ' . a:revision)
   return split(result, '\n')
 endfunction " }}}
 
