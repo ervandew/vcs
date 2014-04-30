@@ -323,7 +323,7 @@ function! vcs#command#ViewFileRevision(path, revision, open_cmd) " {{{
   setlocal noswapfile
   setlocal nobuflisted
   setlocal buftype=nofile
-  setlocal bufhidden=delete
+  setlocal bufhidden=wipe
   doautocmd BufReadPost
 
   let b:vcs_props = copy(props)
@@ -366,7 +366,7 @@ function! vcs#command#ViewCommitPatch(revision) " {{{
   setlocal noswapfile
   setlocal nobuflisted
   setlocal buftype=nofile
-  setlocal bufhidden=delete
+  setlocal bufhidden=wipe
   doautocmd BufReadPost
 
   let b:vcs_props = props
@@ -777,7 +777,7 @@ function! s:TempWindow(props, lines) " {{{
     setlocal winfixheight
     setlocal noswapfile nobuflisted
     setlocal buftype=nofile
-    setlocal bufhidden=delete
+    setlocal bufhidden=wipe
     setlocal modifiable noreadonly
     silent doautocmd WinEnter
   else
