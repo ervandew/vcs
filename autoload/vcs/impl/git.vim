@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2014, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2017, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -221,7 +221,7 @@ function! vcs#impl#git#Log(args, ...) " {{{
   " Optional args:
   "   exec: non-0 to run the command with exec
 
-  let logcmd = 'log --pretty=tformat:"%h|%cn|%cr|%d|%s|"'
+  let logcmd = 'log --pretty=tformat:"%h|%an|%ar|%d|%s|"'
   if g:VcsLogMaxEntries > 0
     let logcmd .= ' -' . g:VcsLogMaxEntries
   endif
