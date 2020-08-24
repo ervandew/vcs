@@ -5,7 +5,7 @@
 " }}}
 "
 " License: {{{
-"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2020, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -77,7 +77,10 @@ if !exists(":VcsLog")
     \ if s:CheckWindow() |
     \   call vcs#command#ViewFileRevision(expand('%:p'), '<args>', 'split') |
     \ endif
-  command VcsAnnotate :call vcs#command#Annotate()
+  command VcsAnnotate
+    \ if s:CheckWindow() |
+    \   call vcs#command#Annotate() |
+    \ endif
   command -nargs=0 VcsInfo
     \ if s:CheckWindow() |
     \   call vcs#command#Info() |
