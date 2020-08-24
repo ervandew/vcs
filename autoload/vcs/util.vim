@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2014, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -448,7 +448,7 @@ function! vcs#util#GoToBufferWindowOrOpen(name, cmd) " {{{
      \ !&modified && line('$') == 1 && getline(1) == ''
       let cmd = 'edit'
     endif
-    silent exec cmd . ' ' . escape(a:name, ' ')
+    silent exec 'keepalt ' . cmd . ' ' . escape(a:name, ' ')
   endif
 endfunction " }}}
 
