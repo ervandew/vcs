@@ -139,21 +139,16 @@ Vim Settings
   The supported repository settings include:
     - web_viewer: The name of the web viewer used for the :VcsWeb* commands.
       Supported viewers include:
+        - jira
         - trac
-        - hgcgi
-        - hgserve
         - gitweb
         - redmine
         - github
-        - googlecode
         - bitbucket
     - web_url: The base url used for the chosen web viewer.
       Examples:
-        # hgcgi
-        http://hg.myhost/myrepos
-
-        # gitweb
-        http://localhost:1234?p=.git
+        # github
+        http://jira.myhost/browse
 
         # redmine
         # Note the literal <cmd> portion. Since redmine urls place the command name
@@ -164,9 +159,6 @@ Vim Settings
 
         # github
         http://github.com/username/my-project
-
-        # googlecode
-        http://code.google.com/p/my-project
 
         # bitbucket
         http://bitbucket.org/username/my-project
@@ -181,7 +173,7 @@ Vim Settings
           \ }
         \ }
 
-- *g:VcsTrackerIdPatterns* (Default: ['#\\(\\d\\+\\)']) -
+- *g:VcsTrackerIdPatterns* (Default: ['#\(\d\+\)']) -
   Specifies a list of regular expression used to match tracker ids inside of
   vcs log comments.  Please note that the first group in each pattern must
   correspond to the tracker ticket id.  That portion of the match will be

@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2020, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -43,14 +43,12 @@ endif
 
 " Script Variables {{{
   let s:vcs_viewers = {
+      \ 'jira': 'https://${host}/browse/${issue}',
       \ 'trac': 'http://${host}/${path}',
       \ 'redmine': 'http://${host}/repositories/<cmd>/${path}',
-      \ 'hgcgi': 'http://${host}/${path}',
-      \ 'hgserve': 'http://${host}/${path}',
       \ 'gitweb': 'http://${host}/git/gitweb.cgi?p=${path}',
       \ 'github': 'http://github.com/${username}/${project}',
       \ 'bitbucket': 'http://bitbucket.org/${username}/${project}',
-      \ 'googlecode': 'http://code.google.com/p/${project}',
     \ }
 
   let s:vcs_viewer_saved = {}
