@@ -310,21 +310,7 @@ function! vcs#command#ViewFileRevision(path, revision, open_cmd) " {{{
     let vcs_file = substitute(vcs_file, ':', '_', 'g')
   endif
   call vcs#util#GoToBufferWindowOrOpen(vcs_file, open_cmd)
-
-  setlocal noreadonly
-  setlocal modifiable
-  silent 1,$delete _
-  call append(1, lines)
-  silent 1,1delete
-  call cursor(1, 1)
-  setlocal nomodified
-  setlocal readonly
-  setlocal nomodifiable
-  setlocal noswapfile
-  setlocal nobuflisted
-  setlocal buftype=nofile
-  setlocal bufhidden=wipe
-  doautocmd BufReadPost
+  call s:VcsContent(lines)
 
   let b:vcs_props = copy(props)
 endfunction " }}}
@@ -353,21 +339,8 @@ function! vcs#command#ViewCommitPatch(revision) " {{{
   let vcs_file = 'vcs_' . a:revision
   call vcs#util#GoToBufferWindowOrOpen(vcs_file, 'split')
 
+  call s:VcsContent(lines)
   setlocal ft=patch
-  setlocal noreadonly
-  setlocal modifiable
-  silent 1,$delete _
-  call append(1, lines)
-  silent 1,1delete
-  call cursor(1, 1)
-  setlocal nomodified
-  setlocal readonly
-  setlocal nomodifiable
-  setlocal noswapfile
-  setlocal nobuflisted
-  setlocal buftype=nofile
-  setlocal bufhidden=wipe
-  doautocmd BufReadPost
 
   let b:vcs_props = props
 endfunction " }}}
@@ -803,6 +776,31 @@ function! s:TempWindow(props, lines) " {{{
     autocmd! BufWinLeave <buffer>
     call vcs#util#GoToBufferWindowRegister(b:filename)
   augroup END
+endfunction " }}}
+
+function! s:VcsContent(lines) " {{{
+  setlocal noreadonly
+  setlocal modifiable
+  silent 1,$delete _
+  call append(1, a:lines)
+  silent 1,1delete
+  call cursor(1, 1)
+  setlocal nomodified
+  setlocal readonly
+  setlocal nomodifiable
+  setlocal noswapfile
+  setlocal nobuflisted
+  setlocal buftype=nofile
+  setlocal bufhidden=wipe
+  doautocmd BufReadPost
+
+  " work around a possible vim bug where setting this buffer as nomodifiable
+  " above affects all unnamed buffers, despite using setlocal and the fact
+  " that 'modifiable' is a local buffer only option.
+  " Note: using 'set' vs 'setlocal' since 'setlocal' doesn't seem to work,
+  " again despite the docs noting that 'modifiable' is a buffer local only
+  " option.
+  autocmd! BufUnload <buffer> set modifiable
 endfunction " }}}
 
 " vim:ft=vim:fdm=marker
