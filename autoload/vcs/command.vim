@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2020, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2022, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -45,15 +45,6 @@ runtime autoload/vcs/util.vim
   if !exists('g:VcsDiffOrientation')
     let g:VcsDiffOrientation = 'vertical'
   endif
-
-  if !exists('g:VcsTrackerIdPatterns')
-    let g:VcsTrackerIdPatterns = ['#\(\d\+\)']
-  endif
-" }}}
-
-" Script Variables {{{
-  let vcs#command#VcsTrackerIdPatterns = g:VcsTrackerIdPatterns
-  let s:trackerIdPattern = join(vcs#command#VcsTrackerIdPatterns, '\|')
 " }}}
 
 function! vcs#command#Annotate(...) " {{{
@@ -477,6 +468,10 @@ function! s:Action() " {{{
       return
     endif
 
+    let settings = vcs#util#GetSettings()
+    let ticket_id_patterns = get(settings, 'patterns', {})
+    let ticket_id_pattern = join(keys(ticket_id_patterns), '\|')
+
     " link to commit patch
     if link == 'view patch'
       let revision = s:GetRevision()
@@ -525,27 +520,24 @@ function! s:Action() " {{{
       endif
 
     " link to bug / feature report
-    elseif link =~ '^' . s:trackerIdPattern . '$'
-      let settings = vcs#util#GetSettings()
-      let url = get(settings, 'tracker_url', '')
-
-      if type(url) == 0
-        return
-      endif
-
-      if url == ''
-        call vcs#util#EchoWarning(
-          \ "Links to ticketing systems requires the 'tracker_url' setting\n" .
-          \ "for your repository to be set in g:VcsRepositorySettings.")
-        return
-      endif
-
-      for pattern in g:VcsTrackerIdPatterns
-        if link =~ pattern
-          let id = substitute(link, pattern, '\1', '')
+    elseif link =~ '^' . ticket_id_pattern . '$'
+      " we matched our combined pattern, now loop over our list of patterns to
+      " find the exact pattern matched and the url it maps to
+      let url = v:none
+      for [pattern, url] in items(ticket_id_patterns)
+        if link =~ '^' . pattern . '$'
           break
         endif
       endfor
+
+      if type(url) == type(v:none)
+        call vcs#util#EchoWarning(
+          \ "Links to ticketing systems requires that you setup the \n" .
+          \ "'patterns' for your repository in g:VcsRepositorySettings.")
+        return
+      endif
+
+      let id = substitute(link, pattern, '\1', '')
       let url = substitute(url, '<id>', id, 'g')
       call vcs#web#OpenUrl(url)
 
@@ -604,6 +596,10 @@ function! s:ToggleDetail() " {{{
   let revision = s:GetRevision()
   let log = s:LogDetail(revision)
 
+  let settings = vcs#util#GetSettings()
+  let ticket_id_patterns = get(settings, 'patterns', {})
+  let ticket_id_pattern = '\(' . join(keys(ticket_id_patterns), '\|') . '\)\>'
+
   setlocal modifiable noreadonly
   if line =~ '^+'
     let open = substitute(line, '+ \(.\{-})\).*', '- \1 ' . log.date, '')
@@ -617,7 +613,7 @@ function! s:ToggleDetail() " {{{
       endif
     endif
     let desc = substitute(log.description, '\_s*$', '', '')
-    let desc = substitute(desc, '\('. s:trackerIdPattern . '\)', '|\1|', 'g')
+    let desc = substitute(desc, '\('. ticket_id_pattern . '\)', '|\1|', 'g')
     let lines += map(split(desc, "\n"), '(v:val != "" ? "\t" : "") . v:val')
     call add(lines, '')
     call add(lines, "\t+ files |view patch|")

@@ -5,7 +5,7 @@
 " }}}
 "
 " License: {{{
-"   Copyright (c) 2005 - 2020, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2022, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -85,17 +85,6 @@ if !exists(":VcsLog")
     \ if s:CheckWindow() |
     \   call vcs#command#Info() |
     \ endif
-endif
-
-if !exists(":VcsWebLog")
-  command -nargs=? -complete=customlist,vcs#util#CommandCompleteRevision
-    \ VcsWebLog call vcs#web#VcsWebLog(<q-args>)
-  command -nargs=? -complete=customlist,vcs#util#CommandCompleteRevision
-    \ VcsWebChangeSet call vcs#web#VcsWebChangeSet(<q-args>)
-  command -nargs=? -complete=customlist,vcs#util#CommandCompleteRevision
-    \ VcsWebAnnotate call vcs#web#VcsWebAnnotate(<q-args>)
-  command -nargs=* -complete=customlist,vcs#util#CommandCompleteRevision
-    \ VcsWebDiff call vcs#web#VcsWebDiff(<q-args>)
 endif
 
 function! s:CheckWindow()

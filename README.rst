@@ -1,4 +1,4 @@
-.. Copyright (c) 2005 - 2010, Eric Van Dewoestine
+.. Copyright (c) 2005 - 2022, Eric Van Dewoestine
    All rights reserved.
 
    Redistribution and use of this software in source and binary forms, with
@@ -32,7 +32,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Vcs is a vim plugin which integrates with version control systems (currently
-mercurial and git) to provide commands to easily annotate files, view the log
-for a file, grep the logs, diff against older revisions, etc.
+just git, but built to support others in the future) to provide commands to
+easily annotate files, view the log for a file, grep the logs, diff against
+older revisions, etc.
 
 See the vim help file for a full list of functionality.

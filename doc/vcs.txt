@@ -12,7 +12,7 @@ Version Control System Commands                  *vcs*
 Vcs Commands                                     *vcs-commands*
 
 The following is a list of commands that may be execute when viewing a
-file versioned in mercurial (hg) or git.
+versioned file:
 
 - *:VcsInfo* -
   Echos vcs info about the currently versioned file.
@@ -61,44 +61,21 @@ file versioned in mercurial (hg) or git.
   This command is only available while in |:VcsAnnotate| mode.
 
 -----------------------------------------------------------------------------
-Vcs Web Commands                                 *vcs-webcommands*
-
-The following list of commands are similar to those above, but instead of
-opening a local buffer, these commands all open a url in the browser so that
-you can use your favorite vcs web front end (trac, redmine, github, etc.).
-
-- *:VcsWebLog* -
-  Opens the log for the currently versioned file in the configured vcs web app.
-
-- *:VcsWebAnnotate* [revision] -
-  Opens the annotated view for the currently versioned file in the configured
-  vcs web app.
-
-- *:VcsWebChangeSet* [revision] -
-  Opens the change set for the currently versioned file in the configured vcs
-  web app.
-
-- *:VcsWebDiff* [revision] -
-  Opens a diff view for the currently versioned file in the configured in the
-  configured vcs web app.
-
------------------------------------------------------------------------------
 Vcs Editor Support                               *vcs-editor*
 
-Mercurial and git both support using vim as the default editor
-for composing commit messages.  When composing this message they all also
-include a list of files to be committed. This plugin hooks into that support
-allowing you to hit <enter> on one of the files to view a diff of the version
-to be committed against the last committed version, or in the case of newly
-added files, view the file to be added.
+Git supports using vim as the default editor for composing commit messages and
+when composing the message there is a list of files to be committed.  This
+plugin hooks into that support allowing you to hit <enter> on one of the files
+to view a diff of the version to be committed against the last committed
+version, or in the case of newly added files, view the file to be added.
 
-Note: Git users, issuing a 'git commit' from any directory other than the root
+Note: Issuing a 'git commit' from any directory other than the root
 of your working copy may lead to errors when attempting to view a diff or file
 in the editor.  This is due to git changing the working directory to the root
 but leaving the displayed file paths as relative, preventing the vcs plugin
 from being able to determine where those files reside.  To resolve this issue
 you will need to run the following to configure git to always display the full
-path (like mercurial does by default):
+path:
 
 >
   $ git config --global status.relativePaths false
@@ -137,47 +114,26 @@ Vim Settings
   settings for that repository.
 
   The supported repository settings include:
-    - web_viewer: The name of the web viewer used for the :VcsWeb* commands.
-      Supported viewers include:
-        - jira
-        - trac
-        - gitweb
-        - redmine
-        - github
-        - bitbucket
-    - web_url: The base url used for the chosen web viewer.
-      Examples:
-        # github
-        http://jira.myhost/browse
+    - patterns: Dictionary of vim regular expressions to the url used to open
+      the proper ticket in the ticketing system.
 
-        # redmine
-        # Note the literal <cmd> portion. Since redmine urls place the command name
-        # (log, changes, etc) in front of the repository name, you must include the
-        # <cmd> placeholder in your configured url so that the :VcsWeb commands can
-        # replace it with the proper value.
-        http://redmine.myhost/repositories/<cmd>/myrepos
+      The key for each entry is a vim regex where the first group in each
+      pattern must correspond to the tracker ticket id.  That portion of the
+      match will be substituted into the '<id>' placeholder of the tracker url
+      the pattern is mapped to.
 
-        # github
-        http://github.com/username/my-project
-
-        # bitbucket
-        http://bitbucket.org/username/my-project
+      The value for each entry is the cooresponding url to your online
+      tracking system where the '<id>' is used as the placeholder of the
+      ticket id pulled using the pattern mapped to this url.
 
   Example:
     >
       let g:VcsRepositorySettings = {
           \ '~/files/development/vim/vcs': {
-            \ 'web_viewer': 'github',
-            \ 'web_url': 'http://github.com/ervandew/vcs',
-            \ 'tracker_url': 'https://github.com/ervandew/vcs/issues#issue/<id>'
+            \ 'patterns': {
+              \ '#\(\d\+\)': 'https://github.com/ervandew/vcs/issues#issue/<id>'
+            \ }
           \ }
         \ }
-
-- *g:VcsTrackerIdPatterns* (Default: ['#\(\d\+\)']) -
-  Specifies a list of regular expression used to match tracker ids inside of
-  vcs log comments.  Please note that the first group in each pattern must
-  correspond to the tracker ticket id.  That portion of the match will be
-  substituted into the '<id>' placeholder of the tracker url defined in
-  |g:VcsRepositorySettings|.
 
 vim:tw=78:ft=help:norl:
