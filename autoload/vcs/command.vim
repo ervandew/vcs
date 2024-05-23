@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2022, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2024, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -598,7 +598,11 @@ function! s:ToggleDetail() " {{{
 
   let settings = vcs#util#GetSettings()
   let ticket_id_patterns = get(settings, 'patterns', {})
-  let ticket_id_pattern = '\(' . join(keys(ticket_id_patterns), '\|') . '\)\>'
+  if len(ticket_id_patterns) > 0
+    let ticket_id_pattern = '\(' . join(keys(ticket_id_patterns), '\|') . '\)\>'
+  else
+    let ticket_id_pattern = ''
+  endif
 
   setlocal modifiable noreadonly
   if line =~ '^+'
@@ -613,7 +617,10 @@ function! s:ToggleDetail() " {{{
       endif
     endif
     let desc = substitute(log.description, '\_s*$', '', '')
-    let desc = substitute(desc, '\('. ticket_id_pattern . '\)', '|\1|', 'g')
+    if ticket_id_pattern != ''
+      echom 'apply pattern: ' . ticket_id_pattern
+      let desc = substitute(desc, '\('. ticket_id_pattern . '\)', '|\1|', 'g')
+    endif
     let lines += map(split(desc, "\n"), '(v:val != "" ? "\t" : "") . v:val')
     call add(lines, '')
     call add(lines, "\t+ files |view patch|")

@@ -5,7 +5,7 @@
 "
 " License:
 "
-" Copyright (C) 2005 - 2013  Eric Van Dewoestine
+" Copyright (C) 2005 - 2024  Eric Van Dewoestine
 "
 " This program is free software: you can redistribute it and/or modify
 " it under the terms of the GNU General Public License as published by
@@ -130,7 +130,7 @@ function! TestLog() " {{{
     \ '  |view| |annotate| |diff working copy| |diff previous|')
   call vunit#AssertEquals(getline(6), '  added 2nd revision content to file1.txt')
   call vunit#AssertEquals(getline(7), '')
-  call vunit#AssertEquals(getline(8), '  + files')
+  call vunit#AssertEquals(getline(8), '  + files |view patch|')
 
   exec "normal \<cr>"
   call vunit#AssertEquals(line('$'), 5)
@@ -199,11 +199,11 @@ function! TestLogFiles() " {{{
   call vunit#AssertEquals(line('$'), 5)
   call cursor(3, 1)
   exec "normal \<cr>"
-  call vunit#AssertEquals(getline(7), '  + files')
+  call vunit#AssertEquals(getline(7), '  + files |view patch|')
   call cursor(7, 1)
   exec "normal \<cr>"
 
-  call vunit#AssertEquals(getline( 7), '  - files')
+  call vunit#AssertEquals(getline( 7), '  - files |view patch|')
   call vunit#AssertEquals(getline( 8), '    |M| test/file2.txt')
   call vunit#AssertEquals(getline( 9), '    |A| test/file3.txt')
   " I'm not sure why, but on windows, git is not picking up the rename
@@ -248,6 +248,35 @@ function! TestLogFiles() " {{{
   endif
 endfunction " }}}
 
+function! TestLogViewPatch() " {{{
+  view file2.txt
+  call vunit#PeekRedir()
+  VcsLog
+  call vunit#AssertEquals(expand('%'), '[vcs_log]')
+  call vunit#AssertEquals(getline(1), 'test/file2.txt')
+  call vunit#AssertEquals(line('$'), 5)
+  call cursor(3, 1)
+  exec "normal \<cr>"
+  call vunit#AssertEquals(getline(7), '  + files |view patch|')
+  call cursor(7, 12)
+  exec "normal \<cr>"
+
+  call vunit#AssertEquals(expand('%'), 'vcs_ee5a562')
+  call vunit#AssertEquals(line('$'), 29)
+  " validate a portiona of the patch
+  call vunit#AssertEquals(getline( 1), 'commit ee5a562c5644fb68dd6bbb31f35e87b441893c24')
+  call vunit#AssertEquals(getline( 2), 'Author: ervandew <ervandew@gmail.com>')
+  call vunit#AssertEquals(getline( 5), '    test modification + move')
+  call vunit#AssertEquals(getline( 7), 'diff --git a/test/file2.txt b/test/file2.txt')
+  call vunit#AssertEquals(getline( 9), '--- a/test/file2.txt')
+  call vunit#AssertEquals(getline(10), '+++ b/test/file2.txt')
+  call vunit#AssertEquals(getline(11), '@@ -1,3 +1,4 @@')
+  call vunit#AssertEquals(getline(12), ' file 2')
+  call vunit#AssertEquals(getline(13), ' some first revision content')
+  call vunit#AssertEquals(getline(14), ' some second revision content')
+  call vunit#AssertEquals(getline(15), '+modification and a move')
+endfunction " }}}
+
 function! TestLogGrepMessage() " {{{
   view file1.txt
   call vunit#PeekRedir()
@@ -271,7 +300,7 @@ function! TestLogGrepMessage() " {{{
 
   call cursor(3, 1)
   exec "normal \<cr>"
-  call vunit#AssertEquals(getline(6), '  + files')
+  call vunit#AssertEquals(getline(6), '  + files |view patch|')
 
   call cursor(6, 1)
   exec "normal \<cr>"
@@ -292,7 +321,7 @@ function! TestLogGrepFiles() " {{{
   call vunit#AssertEquals(getline(1), 'pattern: (second|third) revision')
   call vunit#AssertEquals(line('$'), 5)
   call vunit#AssertTrue(getline(3) =~
-    \ '+ ee5a562 (HEAD, master) ervandew (.* ago) test modification + move')
+    \ '+ ee5a562 (HEAD -> master) ervandew (.* ago) test modification + move')
   call vunit#AssertTrue(getline(4) =~
     \ '+ 101e4be ervandew (.* ago) changed some files and leaving a multi line comment')
   call vunit#AssertTrue(getline(5) =~
@@ -301,7 +330,7 @@ function! TestLogGrepFiles() " {{{
   call cursor(4, 1)
   exec "normal \<cr>"
   call vunit#AssertEquals(line('$'), 11)
-  call vunit#AssertEquals(getline(10), '  + files')
+  call vunit#AssertEquals(getline(10), '  + files |view patch|')
 
   call cursor(10, 1)
   exec "normal \<cr>"
