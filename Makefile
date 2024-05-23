@@ -22,9 +22,9 @@ test:
 	@rm $(TEMP)
 
 dist:
-	@rm vcs.vba 2> /dev/null || true
+	@rm vcs.vmb 2> /dev/null || true
 	@vim -c 'r! git ls-files autoload doc ftplugin plugin' \
-		-c '$$,$$d _' -c '%MkVimball vcs.vba .' -c 'q!'
+		-c '$$,$$d _' -c '%MkVimball vcs .' -c 'q!'
 
 clean:
 	@rm -Rf build 2> /dev/null || true
