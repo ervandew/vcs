@@ -12,7 +12,6 @@ test:
 			if [ -e $$vunit/bin/vunit ] ; then \
 				mkdir -p build/test/temp ; \
 				tar -C build/test/temp -xf test/git.tar.gz ; \
-				tar -C build/test/temp -xf test/mercurial.tar.gz ; \
 				$$vunit/bin/vunit -d build/test -r $$PWD -p plugin/vcs.vim -t test/**/*.vim ; \
 			else \
 				echo "Unable to locate vunit script" ; \
