@@ -125,6 +125,34 @@ function! vcs#impl#git#GetRevisions() " {{{
   return revs
 endfunction " }}}
 
+function! vcs#impl#git#GetStatus(path) " {{{
+  let statuses = {
+    \ 'A': 'added',
+    \ 'D': 'deleted',
+    \ 'M': 'modified',
+    \ 'R': 'renamed',
+  \ }
+  let root = vcs#impl#git#GetRoot()
+  exec 'lcd ' . escape(root, ' ')
+
+  let path = a:path
+
+  let status = vcs#impl#git#Git('status --short -- "' . path . '"')
+  if type(status) == 0
+    return
+  endif
+
+  let status = substitute(status, '\n', '', '')
+  if status != ''
+    let status = split(status, ' ')[0]
+  endif
+
+  if has_key(statuses, status)
+    return statuses[status]
+  endif
+  return ''
+endfunction " }}}
+
 function! vcs#impl#git#GetOrigin() " {{{
   return substitute(vcs#impl#git#Git('config --get remote.origin.url'), '\n$', '', '')
 endfunction " }}}

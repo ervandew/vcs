@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2013, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2024, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -63,7 +63,13 @@ function! vcs#editor#ViewDiff() " {{{
     let path = substitute(expand('%:p'), '\', '/', 'g')
     let revision = vcs#util#GetRevision(path)
     if revision != ''
-      VcsDiff
+      let status = vcs#util#GetStatus(path)
+      " should be when ammending a commit and the file wasn't modified
+      if status == ''
+        VcsDiff prev
+      else
+        VcsDiff
+      endif
       autocmd BufEnter <buffer> nested call s:CloseIfLastWindow()
     endif
   endif

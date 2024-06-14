@@ -145,6 +145,20 @@ function! vcs#util#GetRevisions() " {{{
   return revisions
 endfunction " }}}
 
+function! vcs#util#GetStatus(path) " {{{
+  let cwd = vcs#util#LcdRoot()
+  try
+    let GetStatus = vcs#util#GetVcsFunction('GetStatus')
+    if type(GetStatus) != 2
+      return
+    endif
+    let status = GetStatus(a:path)
+  finally
+    exec 'lcd ' . cwd
+  endtry
+  return status
+endfunction " }}}
+
 function! vcs#util#GetModifiedFiles() " {{{
   " Gets a list of modified files, including untracked files that are not
   " ignored.
