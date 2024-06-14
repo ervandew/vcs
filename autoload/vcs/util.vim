@@ -1,7 +1,7 @@
 " Author:  Eric Van Dewoestine
 "
 " License: {{{
-"   Copyright (c) 2005 - 2022, Eric Van Dewoestine
+"   Copyright (c) 2005 - 2024, Eric Van Dewoestine
 "   All rights reserved.
 "
 "   Redistribution and use of this software in source and binary forms, with
@@ -546,7 +546,7 @@ function! vcs#util#GetExistingSigns(...) " {{{
 endfunction " }}}
 
 function! vcs#util#DefineSign(name, text) " {{{
-  exec "sign define " . a:name . " text=" . a:text . " texthl=Statement"
+  exec "sign define " . a:name . " text=" . a:text . " texthl=VcsAnnotate"
 endfunction " }}}
 
 function! vcs#util#UndefineSign(name) " {{{

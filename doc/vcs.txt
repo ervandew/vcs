@@ -52,6 +52,9 @@ versioned file:
   Running this command on an already annotated file removes all annotations and
   disables the CursorMoved event.
 
+  The syntax highlighting for the signs can be customized via the
+  |VcsAnnotate| highlight group.
+
 - *:VcsAnnotateCat* -
   Like |:VcsCat| but use the annotated revision of the line under the cursor.
   This command is only available while in |:VcsAnnotate| mode.
@@ -126,7 +129,7 @@ Vim Settings
       tracking system where the '<id>' is used as the placeholder of the
       ticket id pulled using the pattern mapped to this url.
 
-  Example:
+  Eg:
     >
       let g:VcsRepositorySettings = {
           \ '~/files/development/vim/vcs': {
@@ -135,5 +138,12 @@ Vim Settings
             \ }
           \ }
         \ }
+
+- *VcsAnnotate* - highlight group that can be used to customize the look of
+  the signs placed when annotating a file.
+
+  Eg:
+    >
+      hi VcsAnnotate ctermfg=magenta guifg=#5f5faf
 
 vim:tw=78:ft=help:norl:
