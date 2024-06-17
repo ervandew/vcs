@@ -523,14 +523,14 @@ function! s:Action() " {{{
     elseif link =~ '^' . ticket_id_pattern . '$'
       " we matched our combined pattern, now loop over our list of patterns to
       " find the exact pattern matched and the url it maps to
-      let url = v:none
+      let url = v:null
       for [pattern, url] in items(ticket_id_patterns)
         if link =~ '^' . pattern . '$'
           break
         endif
       endfor
 
-      if type(url) == type(v:none)
+      if type(url) == type(v:null)
         call vcs#util#EchoWarning(
           \ "Links to ticketing systems requires that you setup the \n" .
           \ "'patterns' for your repository in g:VcsRepositorySettings.")
@@ -618,7 +618,6 @@ function! s:ToggleDetail() " {{{
     endif
     let desc = substitute(log.description, '\_s*$', '', '')
     if ticket_id_pattern != ''
-      echom 'apply pattern: ' . ticket_id_pattern
       let desc = substitute(desc, '\('. ticket_id_pattern . '\)', '|\1|', 'g')
     endif
     let lines += map(split(desc, "\n"), '(v:val != "" ? "\t" : "") . v:val')
