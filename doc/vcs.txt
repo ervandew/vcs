@@ -53,7 +53,7 @@ versioned file:
   disables the CursorMoved event.
 
   The syntax highlighting for the signs can be customized via the
-  |VcsAnnotate| highlight group.
+  |VcsAnnotate| and |VcsAnnotateUncommitted| highlight groups.
 
 - *:VcsAnnotateCat* -
   Like |:VcsCat| but use the annotated revision of the line under the cursor.
@@ -145,5 +145,12 @@ Vim Settings
   Eg:
     >
       hi VcsAnnotate ctermfg=magenta guifg=#5f5faf
+
+- *VcsAnnotateUncommitted* - highlight group that can be used to customize the
+  look of the signs placed for uncommitted lines when annotating a file.
+
+  Eg:
+    >
+      hi VcsAnnotateUncommitted ctermfg=green guifg=#5faf5f
 
 vim:tw=78:ft=help:norl:

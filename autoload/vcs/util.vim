@@ -560,7 +560,11 @@ function! vcs#util#GetExistingSigns(...) " {{{
 endfunction " }}}
 
 function! vcs#util#DefineSign(name, text) " {{{
-  exec "sign define " . a:name . " text=" . a:text . " texthl=VcsAnnotate"
+  let hi = 'VcsAnnotate'
+  if a:name == 'vcs_annotate_uncommitted'
+    let hi = 'VcsAnnotateUncommitted'
+  endif
+  exec "sign define " . a:name . " text=" . a:text . " texthl=" . hi
 endfunction " }}}
 
 function! vcs#util#UndefineSign(name) " {{{

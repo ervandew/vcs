@@ -349,35 +349,37 @@ function! s:ApplyAnnotations(annotations) " {{{
 
   let defined = vcs#util#GetDefinedSigns()
   let index = 1
+  let previous = ''
   for annotation in a:annotations
-    if annotation == 'uncommitted'
-      if has_key(existing_annotations, index)
-        call vcs#util#UnplaceSign(existing_annotations[index].id)
+    if !has_key(existing, index)
+      if annotation == 'uncommitted'
+        let sign_name = 'vcs_annotate_uncommitted'
+        let sign = '\ +'
+      else
+        let user = substitute(annotation, '^.\{-})\s\+\(.\{-}\)\s*$', '\1', '')
+        let sign = user[:1]
+        let name_parts = split(user)
+        " if the user name appears to be in the form of First Last, then try using
+        " using the first letter of each as initials
+        if len(name_parts) > 1 && name_parts[0] =~ '^\w' && name_parts[1] =~ '^\w'
+          let sign = name_parts[0][0] . name_parts[1][0]
+        endif
+
+        let sign_name = 'vcs_annotate_' . substitute(user[:5], ' ', '_', 'g')
+        if annotation == previous
+          let sign_name .= '_cont'
+          let sign = '\ ▕'
+        endif
       endif
-      let index += 1
-      continue
-    endif
 
-    if has_key(existing, index)
-      let index += 1
-      continue
+      if index(defined, sign_name) == -1
+        call vcs#util#DefineSign(sign_name, sign)
+        call add(defined, sign_name)
+      endif
+      call vcs#util#PlaceSign(sign_name, index)
     endif
-
-    let user = substitute(annotation, '^.\{-})\s\+\(.\{-}\)\s*$', '\1', '')
-    let user_abbrv = user[:1]
-    let name_parts = split(user)
-    " if the user name appears to be in the form of First Last, then try using
-    " using the first letter of each as initials
-    if len(name_parts) > 1 && name_parts[0] =~ '^\w' && name_parts[1] =~ '^\w'
-      let user_abbrv = name_parts[0][0] . name_parts[1][0]
-    endif
-    let sign_name = 'vcs_annotate_' . substitute(user[:5], ' ', '_', 'g')
-    if index(defined, sign_name) == -1
-      call vcs#util#DefineSign(sign_name, user_abbrv)
-      call add(defined, sign_name)
-    endif
-    call vcs#util#PlaceSign(sign_name, index)
     let index += 1
+    let previous = annotation
   endfor
 
   let b:vcs_annotations = a:annotations
@@ -404,16 +406,27 @@ function! s:AnnotateInfo() " {{{
   endif
 
   if exists('b:vcs_annotations') && len(b:vcs_annotations) >= line('.')
-    call vcs#util#WideMessage('echo', b:vcs_annotations[line('.') - 1])
+    let annotation = b:vcs_annotations[line('.') - 1]
+    if annotation == 'uncommitted'
+      let info = annotation
+    else
+      let GetInfo = vcs#util#GetVcsFunction('GetAnnotationInfo')
+      let info = GetInfo(annotation)
+    endif
+    call vcs#util#WideMessage('echo', info)
   endif
 endfunction " }}}
 
 function! s:AnnotateOff() " {{{
   if exists('b:vcs_annotations')
     let defined = vcs#util#GetDefinedSigns()
+    let previous = ''
     for annotation in b:vcs_annotations
       let user = substitute(annotation, '^.\{-})\s\+\(.\{-}\)\s*$', '\1', '')
       let sign_name = 'vcs_annotate_' . substitute(user[:5], ' ', '_', 'g')
+      if annotation == previous
+        let sign_name .= '_cont'
+      endif
       if index(defined, sign_name) != -1
         let signs = vcs#util#GetExistingSigns(sign_name)
         for sign in signs
@@ -422,6 +435,7 @@ function! s:AnnotateOff() " {{{
         call vcs#util#UndefineSign(sign_name)
         call remove(defined, index(defined, sign_name))
       endif
+      let previous = annotation
     endfor
     unlet b:vcs_annotations
     unlet b:vcs_props

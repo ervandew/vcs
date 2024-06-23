@@ -69,6 +69,14 @@ function! vcs#impl#git#GetAnnotations(path, revision) " {{{
   return annotations
 endfunction " }}}
 
+function! vcs#impl#git#GetAnnotationInfo(annotation) " {{{
+  let revision = substitute(a:annotation, '\(.\{-}\)\s.*', '\1', '')
+  let result = vcs#impl#git#Git(
+    \ 'log "--pretty=format:%h %ai %an %s" -1 ' . revision
+  \ )
+  return type(result) == 0 ? '' : result
+endfunction " }}}
+
 function! vcs#impl#git#GetPreviousRevision(path, ...) " {{{
   " Optional args:
   "   revision
