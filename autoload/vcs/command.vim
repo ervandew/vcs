@@ -71,7 +71,7 @@ function! vcs#command#Annotate(...) " {{{
     let Annotate = vcs#util#GetVcsFunction('GetAnnotations')
     if type(Annotate) != 2
       call vcs#util#EchoError(
-        \ 'Current file is not under hg or git version control.')
+        \ 'Current file is not under version control.')
       return
     endif
     let annotations = Annotate(path, revision)

@@ -42,7 +42,7 @@ else
 endif
 
 " Script Variables {{{
-  let s:types = {'git': '.git', 'hg': '.hg'}
+  let s:types = {'git': '.git'}
 
   let s:temp_dir = expand('$TMP')
   if s:temp_dir == '$TMP'

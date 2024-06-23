@@ -24,8 +24,8 @@ versioned file:
   links denoted by '|link name|' (ex.  '|diff previous|').
 
 - *:VcsLogGrepMessage* pattern - Like |:VcsLog| but supports a regex pattern
-  for git, or a keyword or phrase for hg, which is used to limit log entries
-  to those whose log message match that pattern, keyword, or phrase.
+  which is used to limit log entries to those whose log message match that
+  pattern, keyword, or phrase.
 
 - *:VcsLogGrepFiles* pattern - Like |:VcsLogGrepMessage| but supports a regex
   pattern which is used to limit log entries to those that have files whose
