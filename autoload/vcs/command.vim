@@ -772,6 +772,7 @@ function! s:TempWindow(props, lines) " {{{
     setlocal buftype=nofile
     setlocal bufhidden=wipe
     setlocal modifiable noreadonly
+    silent doautocmd WinNew
     silent doautocmd WinEnter
   else
     exec bufwinnr(name) . "winc w"
