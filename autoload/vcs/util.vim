@@ -328,11 +328,8 @@ function! vcs#util#WideMessage(command, message) " {{{
 
   set noruler noshowcmd
   redraw
-  if len(message) > &columns
-    let remove = len(message) - &columns
-    let start = (len(message) / 2) - (remove / 2) - 4
-    let end = start + remove + 4
-    let message = substitute(message, '\%' . start . 'c.*\%' . end . 'c', '...', '')
+  if len(message) > &columns - 1
+    let message = message[:&columns - 2]
   endif
   exec a:command . ' "' . escape(message, '"\') . '"'
 
