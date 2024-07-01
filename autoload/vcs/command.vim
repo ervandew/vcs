@@ -772,14 +772,16 @@ function! s:TempWindow(props, lines) " {{{
     setlocal buftype=nofile
     setlocal bufhidden=wipe
     setlocal modifiable noreadonly
-    silent doautocmd WinNew
-    silent doautocmd WinEnter
-  else
-    exec bufwinnr(name) . "winc w"
-    setlocal modifiable noreadonly
-    silent 1,$delete _
-    silent doautocmd WinEnter
+    resize 10
+    doautocmd WinNew
+    doautocmd WinEnter
+    exec winnr . 'winc w'
   endif
+
+  exec bufwinnr(name) . 'winc w'
+  setlocal modifiable noreadonly
+  silent 1,$delete _
+  silent doautocmd WinEnter
 
   call append(1, a:lines)
   retab
