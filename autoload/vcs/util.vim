@@ -558,7 +558,9 @@ endfunction " }}}
 
 function! vcs#util#DefineSign(name, text) " {{{
   let hi = 'VcsAnnotate'
-  if a:name == 'vcs_annotate_uncommitted'
+  if a:name =~ 'vcs_annotate_me\(_cont\)\?'
+    let hi = 'VcsAnnotateMe'
+  elseif a:name == 'vcs_annotate_uncommitted'
     let hi = 'VcsAnnotateUncommitted'
   endif
   exec "sign define " . a:name . " text=" . a:text . " texthl=" . hi

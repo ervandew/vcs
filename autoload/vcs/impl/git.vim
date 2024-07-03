@@ -372,6 +372,11 @@ function! vcs#impl#git#Git(args, ...) " {{{
   return result
 endfunction " }}}
 
+function! vcs#impl#git#Me() " {{{
+  let result = substitute(vcs#util#Vcs('git', 'config user.name'), '\n$', '', '')
+  return result
+endfunction " }}}
+
 function! s:ReadIndex() " {{{
   " Used to read a file with the name index_blob_<index hash>_<filename>, for
   " use by the git editor diff support.

@@ -144,7 +144,14 @@ Vim Settings
 
   Eg:
     >
-      hi VcsAnnotate ctermfg=magenta guifg=#5f5faf
+      hi VcsAnnotate ctermfg=grap guifg=#777777
+
+- *VcsAnnotateMe* - highlight group for annotations where the author name
+  matches `$ git config user.name`
+
+  Eg:
+    >
+      hi VcsAnnotateMe ctermfg=magenta guifg=#5f5faf
 
 - *VcsAnnotateUncommitted* - highlight group that can be used to customize the
   look of the signs placed for uncommitted lines when annotating a file.

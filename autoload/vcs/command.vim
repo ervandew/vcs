@@ -350,6 +350,8 @@ function! s:ApplyAnnotations(annotations) " {{{
   let defined = vcs#util#GetDefinedSigns()
   let index = 1
   let previous = ''
+  let Me = vcs#util#GetVcsFunction('Me')
+  let me = type(Me) == 2 ? Me() : ''
   for annotation in a:annotations
     if !has_key(existing, index)
       if annotation == 'uncommitted'
@@ -365,7 +367,11 @@ function! s:ApplyAnnotations(annotations) " {{{
           let sign = name_parts[0][0] . name_parts[1][0]
         endif
 
-        let sign_name = 'vcs_annotate_' . substitute(user[:5], ' ', '_', 'g')
+        if user == me
+          let sign_name = 'vcs_annotate_me'
+        else
+          let sign_name = 'vcs_annotate_' . substitute(user[:5], ' ', '_', 'g')
+        endif
         if annotation == previous
           let sign_name .= '_cont'
           let sign = '\ ▕'
