@@ -427,12 +427,18 @@ function! s:AnnotateOff() " {{{
   if exists('b:vcs_annotations')
     let defined = vcs#util#GetDefinedSigns()
     let previous = ''
+    let Me = vcs#util#GetVcsFunction('Me')
+    let me = type(Me) == 2 ? Me() : ''
     for annotation in b:vcs_annotations
       if annotation == 'uncommitted'
         let sign_name = 'vcs_annotate_uncommitted'
       else
         let user = substitute(annotation, '^.\{-})\s\+\(.\{-}\)\s*$', '\1', '')
-        let sign_name = 'vcs_annotate_' . substitute(user[:5], ' ', '_', 'g')
+        if user == me
+          let sign_name = 'vcs_annotate_me'
+        else
+          let sign_name = 'vcs_annotate_' . substitute(user[:5], ' ', '_', 'g')
+        endif
       endif
       if annotation == previous
         let sign_name .= '_cont'
