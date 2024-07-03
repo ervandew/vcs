@@ -316,27 +316,6 @@ function! s:Echo(message, highlight) " {{{
   endif
 endfunction " }}}
 
-function! vcs#util#WideMessage(command, message) " {{{
-  " Executes the supplied echo command and forces vim to display as much as
-  " possible without the "Press Enter" prompt.
-  " Thanks to vimtip #1289
-
-  let saved_ruler = &ruler
-  let saved_showcmd = &showcmd
-
-  let message = substitute(a:message, '^\s\+', '', '')
-
-  set noruler noshowcmd
-  redraw
-  if len(message) > &columns - 1
-    let message = message[:&columns - 2]
-  endif
-  exec a:command . ' "' . escape(message, '"\') . '"'
-
-  let &ruler = saved_ruler
-  let &showcmd = saved_showcmd
-endfunction " }}}
-
 function! vcs#util#PromptConfirm(prompt) " {{{
   " Creates a yes/no prompt for the user using the supplied prompt string.
   " Returns -1 if the user canceled, otherwise 1 for yes, and 0 for no.

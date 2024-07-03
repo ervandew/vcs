@@ -72,9 +72,18 @@ endfunction " }}}
 function! vcs#impl#git#GetAnnotationInfo(annotation) " {{{
   let revision = substitute(a:annotation, '\(.\{-}\)\s.*', '\1', '')
   let result = vcs#impl#git#Git(
-    \ 'log "--pretty=format:%h %ai %an %s" -1 ' . revision
+    \ 'log "--pretty=format:%h|%ai|%an|%s" -1 ' . revision
   \ )
-  return type(result) == 0 ? '' : result
+  if type(result) == 0
+    return {}
+  endif
+  let parts = split(result, '|')
+  return {
+    \ 'version': parts[0],
+    \ 'date': parts[1],
+    \ 'author': parts[2],
+    \ 'message': join(parts[3:], '')
+  \ }
 endfunction " }}}
 
 function! vcs#impl#git#GetPreviousRevision(path, ...) " {{{

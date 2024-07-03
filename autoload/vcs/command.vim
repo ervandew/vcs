@@ -391,6 +391,7 @@ function! s:ApplyAnnotations(annotations) " {{{
   let b:vcs_annotations = a:annotations
   let b:vcs_props = s:GetProps()
 
+  call s:HighlightGroups()
   call s:AnnotateInfo()
 
   command! -buffer VcsAnnotateCat call s:AnnotateCat()
@@ -419,7 +420,32 @@ function! s:AnnotateInfo() " {{{
       let GetInfo = vcs#util#GetVcsFunction('GetAnnotationInfo')
       let info = GetInfo(annotation)
     endif
-    call vcs#util#WideMessage('echo', info)
+    let saved_ruler = &ruler
+    let saved_showcmd = &showcmd
+    set noruler noshowcmd
+    redraw
+
+    let message = join(values(info), ' ')
+    if has('nvim')
+      let diff = len(message) - &columns + 2
+      let message = info['message']
+      if diff > 0
+        let message = message[:len(message) - diff]
+      endif
+      call luaeval('vim.api.nvim_echo(_A[1], _A[2], _A[3])', [[
+        \ [info['version'] . ' ', 'VcsRevision'],
+        \ [info['date'] . ' ', 'VcsDate'],
+        \ [info['author'] . ' ', 'VcsAuthor'],
+        \ [message],
+      \ ], v:false, []])
+    else
+      if len(message) > &columns - 1
+        let message = message[:&columns - 2]
+      endif
+      exec 'echo "' .. escape(message, '"\') .. '"'
+    endif
+    let &ruler = saved_ruler
+    let &showcmd = saved_showcmd
   endif
 endfunction " }}}
 
@@ -757,14 +783,27 @@ function! s:LogMappings() " {{{
   nnoremap <silent> <buffer> <cr> :call <SID>Action()<cr>
 endfunction " }}}
 
+function! s:HighlightGroups() " {{{
+  let groups = [
+    \ ['VcsRevision', 'Number'],
+    \ ['VcsRefs', ' Tag'],
+    \ ['VcsDate', ' String'],
+    \ ['VcsAuthor', ' Identifier'],
+    \ ['VcsLink', ' Label'],
+    \ ['VcsFiles', ' Comment'],
+  \ ]
+  for [name, link] in groups
+    if !hlexists(name)
+      exec 'hi link ' .. name .. ' ' .. link
+    endif
+  endfor
+endfunction " }}}
+
 function! s:LogSyntax() " {{{
   set ft=vcs_log
-  hi link VcsRevision Identifier
-  hi link VcsRefs Tag
-  hi link VcsDate String
-  hi link VcsLink Label
-  hi link VcsFiles Comment
+  call s:HighlightGroups()
   syntax match VcsRevision /\(^[+-] \)\@<=\w\+/
+  syntax match VcsAuthor /\(^[+-] \w\+ \((.\{-}) \)\?\)\@<=.\{-}\( (\)\@=/
   syntax match VcsRefs /\(^[+-] \w\+ \)\@<=(.\{-})/
   syntax match VcsDate /\(^[+-] \w\+ \((.\{-}) \)\?\w.\{-}\)\@<=(\d.\{-})/
   syntax match VcsLink /|\S.\{-}|/
