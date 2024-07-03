@@ -517,9 +517,11 @@ function! s:Action() " {{{
           call vcs#command#ViewFileRevision(file, revision, '')
           let buf1 = bufnr('%')
           call vcs#command#ViewFileRevision(file, previous, 'bel ' . orien . ' split')
+          let buf2 = bufnr('%')
           diffthis
           call vcs#util#GoToBufferWindow(buf1)
           diffthis
+          call s:Link(buf1, buf2)
         endif
       else
         let filename = b:filename
@@ -581,9 +583,11 @@ function! s:Action() " {{{
       let buf1 = bufnr('%')
       let orien = g:VcsDiffOrientation == 'horizontal' ? '' : 'vertical'
       call vcs#command#ViewFileRevision(old, previous, 'bel ' . orien . ' split')
+      let buf2 = bufnr('%')
       diffthis
       call vcs#util#GoToBufferWindow(buf1)
       diffthis
+      call s:Link(buf1, buf2)
 
     " deleted file
     elseif link == 'D'
@@ -753,6 +757,15 @@ function! s:LogSyntax() " {{{
   syntax match VcsDate /\(^[+-] \w\+ \((.\{-}) \)\?\w.\{-}\)\@<=(\d.\{-})/
   syntax match VcsLink /|\S.\{-}|/
   exec 'syntax match VcsFiles /\(^\s\+[+-] \)\@<=files\>/'
+endfunction " }}}
+
+function! s:Link(buf1, buf2) " {{{
+  " used when opening temporary buffers for a diff, where linking them will
+  " result in closing both if either is closed
+  augroup vcs_diff
+    exec 'autocmd BufWinLeave <buffer=' . a:buf1 . '> bdelete ' . a:buf2
+    exec 'autocmd BufWinLeave <buffer=' . a:buf2 . '> bdelete ' . a:buf1
+  augroup END
 endfunction " }}}
 
 function! s:TempWindow(props, lines) " {{{
