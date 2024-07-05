@@ -417,8 +417,13 @@ function! s:AnnotateInfo() " {{{
     if annotation == 'uncommitted'
       let info = annotation
     else
-      let GetInfo = vcs#util#GetVcsFunction('GetAnnotationInfo')
-      let info = GetInfo(annotation)
+      let cwd = vcs#util#LcdRoot()
+      try
+        let GetInfo = vcs#util#GetVcsFunction('GetAnnotationInfo')
+        let info = GetInfo(annotation)
+      finally
+        exec 'lcd ' . cwd
+      endtry
     endif
     let saved_ruler = &ruler
     let saved_showcmd = &showcmd
