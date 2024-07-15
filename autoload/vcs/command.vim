@@ -111,6 +111,7 @@ function! vcs#command#Diff(revision, ...) " {{{
 
   call vcs#command#ViewFileRevision(path, revision, 'bel ' . orien . ' split')
   diffthis
+  let diffbuf = bufnr()
 
   let b:filename = filename
   let b:vcs_diff_temp = 1
@@ -122,6 +123,11 @@ function! vcs#command#Diff(revision, ...) " {{{
 
   call vcs#util#GoToBufferWindow(buf1)
   diffthis
+
+  augroup vcs_diff
+    autocmd! BufWinLeave <buffer>
+    exec 'autocmd BufWinLeave <buffer> silent! bdelete ' . diffbuf
+  augroup END
 endfunction " }}}
 
 function! vcs#command#Info() " {{{
