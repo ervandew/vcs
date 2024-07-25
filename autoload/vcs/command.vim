@@ -337,7 +337,7 @@ function! vcs#command#ViewCommitPatch(revision) " {{{
   call vcs#util#GoToBufferWindowOrOpen(vcs_file, 'split')
 
   call s:VcsContent(lines)
-  setlocal ft=patch
+  setlocal ft=diff
 
   let b:vcs_props = props
 endfunction " }}}
