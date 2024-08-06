@@ -645,6 +645,10 @@ function! s:Action() " {{{
       let previous = vcs#util#GetPreviousRevision(file, revision)
       call vcs#command#ViewFileRevision(file, previous, '')
 
+    " file reference
+    elseif filereadable(link)
+      winc k
+      call vcs#util#GoToBufferWindowOrOpen(link, 'split')
     endif
   catch /vcs error/
     " the error message is printed by vcs#util#Vcs
@@ -721,10 +725,11 @@ function! s:ToggleFiles() " {{{
     let files = s:LogFiles(revision)
     let lines = []
     for file in files
+      let line = "\t\t|" . file.status . '| '
       if file.status == 'R'
-        call add(lines, "\t\t|" . file.status . "| " . file.old . ' -> ' . file.new)
+        call add(lines, line . file.old . ' -> |' . file.new . '|')
       else
-        call add(lines, "\t\t|" . file.status . "| " . file.file)
+        call add(lines, line . '|' . file.file . '|')
       endif
     endfor
     call append(lnum, lines)
