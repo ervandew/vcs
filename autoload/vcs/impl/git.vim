@@ -260,7 +260,9 @@ function! vcs#impl#git#Info(path) " {{{
   call vcs#util#Echo(result)
 endfunction " }}}
 
-function! vcs#impl#git#Log(args, path) " {{{
+function! vcs#impl#git#Log(args, path, ...) " {{{
+  " Optional args:
+  "   exec: non-0 to run the command with exec
   let logcmd = 'log --pretty=tformat:"%h|%an|%ar|%d|%s|"'
   if g:VcsLogMaxEntries > 0
     let logcmd .= ' -' . g:VcsLogMaxEntries
@@ -273,7 +275,12 @@ function! vcs#impl#git#Log(args, path) " {{{
     let logcmd .= ' --follow ' . a:path
   endif
 
-  let result = vcs#impl#git#Git(logcmd)
+  let exec = len(a:000) > 0 ? a:000[0] : 0
+  if exec
+    let logcmd = escape(logcmd, '%')
+  endif
+
+  let result = vcs#impl#git#Git(logcmd, exec)
   if type(result) == 0
     return
   endif
@@ -305,7 +312,7 @@ function! vcs#impl#git#LogGrep(pattern, args, type) " {{{
     let args .= ' ' . a:args
   endif
 
-  return vcs#impl#git#Log(args, 1)
+  return vcs#impl#git#Log(args, '', 1)
 endfunction " }}}
 
 function! vcs#impl#git#LogDetail(revision) " {{{
