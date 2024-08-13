@@ -51,11 +51,13 @@ augroup END
 
 function! vcs#impl#git#GetAnnotations(path, revision) " {{{
   let cmd = 'annotate'
+  let path = a:path
   let revision = ''
   if a:revision != ''
     let revision = ' ' . substitute(a:revision, '.*:', '', '')
+    let path = s:GetPathForRevision(path, revision)
   endif
-  let result = vcs#impl#git#Git(cmd . ' "' . a:path . '"' . revision)
+  let result = vcs#impl#git#Git(cmd . ' "' . path . '"' . revision)
   if type(result) == 0
     return
   endif
@@ -258,10 +260,7 @@ function! vcs#impl#git#Info(path) " {{{
   call vcs#util#Echo(result)
 endfunction " }}}
 
-function! vcs#impl#git#Log(args, ...) " {{{
-  " Optional args:
-  "   exec: non-0 to run the command with exec
-
+function! vcs#impl#git#Log(args, path) " {{{
   let logcmd = 'log --pretty=tformat:"%h|%an|%ar|%d|%s|"'
   if g:VcsLogMaxEntries > 0
     let logcmd .= ' -' . g:VcsLogMaxEntries
@@ -270,11 +269,11 @@ function! vcs#impl#git#Log(args, ...) " {{{
     let logcmd .= ' ' . a:args
   endif
 
-  let exec = len(a:000) > 0 ? a:000[0] : 0
-  if exec
-    let logcmd = escape(logcmd, '%')
+  if a:path != ''
+    let logcmd .= ' --follow ' . a:path
   endif
-  let result = vcs#impl#git#Git(logcmd, exec)
+
+  let result = vcs#impl#git#Git(logcmd)
   if type(result) == 0
     return
   endif
@@ -283,12 +282,12 @@ function! vcs#impl#git#Log(args, ...) " {{{
     let values = split(line, '|')
     let refs = split(substitute(values[3], '^\s*(\|)\s*$', '', 'g'), ',\s*')
     call add(log, {
-        \ 'revision': values[0],
-        \ 'author': values[1],
-        \ 'age': values[2],
-        \ 'refs': refs,
-        \ 'comment': values[4],
-     \ })
+      \ 'revision': values[0],
+      \ 'author': values[1],
+      \ 'age': values[2],
+      \ 'refs': refs,
+      \ 'comment': values[4],
+    \ })
   endfor
   let root_dir = exists('b:vcs_props') ?
     \ b:vcs_props.root_dir : vcs#impl#git#GetRoot()
@@ -318,14 +317,14 @@ function! vcs#impl#git#LogDetail(revision) " {{{
   let values = split(result, '|')
   let refs = split(substitute(values[4], '^\s*(\|)\s*$', '', 'g'), ',\s*')
   return {
-      \ 'revision': values[0],
-      \ 'author': values[1],
-      \ 'age': values[2],
-      \ 'date': values[3],
-      \ 'refs': refs,
-      \ 'comment': values[5],
-      \ 'description': values[6],
-   \ }
+    \ 'revision': values[0],
+    \ 'author': values[1],
+    \ 'age': values[2],
+    \ 'date': values[3],
+    \ 'refs': refs,
+    \ 'comment': values[5],
+    \ 'description': values[6],
+  \ }
 endfunction " }}}
 
 function! vcs#impl#git#LogFiles(revision) " {{{
@@ -354,6 +353,8 @@ function! vcs#impl#git#ViewFileRevision(path, revision) " {{{
   " kind of a hack to support diffs against git's staging (index) area.
   if path =~ '\<index_blob_[a-z0-9]\{40}_'
     let path = substitute(path, '\<index_blob_[a-z0-9]\{40}_', '', '')
+  else
+    let path = s:GetPathForRevision(path, a:revision)
   endif
 
   let result = vcs#impl#git#Git('show "' . a:revision . ':' . path . '"')
@@ -384,6 +385,27 @@ endfunction " }}}
 function! vcs#impl#git#Me() " {{{
   let result = substitute(vcs#util#Vcs('git', 'config user.name'), '\n$', '', '')
   return result
+endfunction " }}}
+
+function! s:GetPathForRevision(path, revision) " {{{
+  " handle renames by grabbing all logs up to the requested revision, then the
+  " filename at the revision (might be a better way to do this)
+  let path = a:path
+  let logs = vcs#impl#git#Git(
+    \ 'log ' .
+    \ '--pretty=tformat:"%h" ' .
+    \ '--name-status ' .
+    \ '--follow ' .
+    \ a:revision . '~1.. ' .
+    \ '"' . path . '"'
+  \ )
+  if type(logs) != 0
+    let line = split(logs, '\n')[-1]
+    if line =~ '^[AMRC]'
+      let path = split(line, '\t')[-1]
+    endif
+  endif
+  return path
 endfunction " }}}
 
 function! s:ReadIndex() " {{{

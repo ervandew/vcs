@@ -165,10 +165,7 @@ function! vcs#command#Log(args) " {{{
       let args = '"' . join(arglist, '" "') . '" '
     endif
 
-    if path != ''
-      let args .= '"' . path . '"'
-    endif
-    let info = Log(args)
+    let info = Log(args, path)
   finally
     exec 'lcd ' . cwd
   endtry
@@ -535,6 +532,7 @@ function! s:Action() " {{{
       return
     endif
 
+    let root = vcs#util#GetRoot()
     let settings = vcs#util#GetSettings()
     let ticket_id_patterns = get(settings, 'patterns', {})
     let ticket_id_pattern = join(keys(ticket_id_patterns), '\|')
@@ -646,7 +644,7 @@ function! s:Action() " {{{
       call vcs#command#ViewFileRevision(file, previous, '')
 
     " file reference
-    elseif filereadable(link)
+    elseif filereadable(root . '/' . link)
       winc k
       call vcs#util#GoToBufferWindowOrOpen(link, 'split')
     endif
@@ -720,6 +718,7 @@ function! s:ToggleFiles() " {{{
 
   setlocal modifiable noreadonly
   if line =~ '^\s\++'
+    let root = vcs#util#GetRoot()
     let open = substitute(line, '+', '-', '')
     call setline(lnum, open)
     let files = s:LogFiles(revision)
@@ -727,10 +726,18 @@ function! s:ToggleFiles() " {{{
     for file in files
       let line = "\t\t|" . file.status . '| '
       if file.status == 'R'
-        call add(lines, line . file.old . ' -> |' . file.new . '|')
+        let entry = file.new
+        if filereadable(root . '/' . file.new)
+          let entry = '|' . file.new . '|'
+        endif
+        let entry = file.old . ' -> ' . entry
       else
-        call add(lines, line . '|' . file.file . '|')
+        let entry = file.file
+        if filereadable(root . '/' . file.file)
+          let entry = '|' . file.file . '|'
+        endif
       endif
+      call add(lines, line . entry)
     endfor
     call append(lnum, lines)
     retab
