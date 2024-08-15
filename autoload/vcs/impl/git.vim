@@ -406,7 +406,7 @@ function! s:GetPathForRevision(path, revision) " {{{
     \ a:revision . '~1.. ' .
     \ '"' . path . '"'
   \ )
-  if type(logs) != 0
+  if type(logs) != 0 && logs != ''
     let line = split(logs, '\n')[-1]
     if line =~ '^[AMRC]'
       let path = split(line, '\t')[-1]
