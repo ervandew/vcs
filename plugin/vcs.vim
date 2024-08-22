@@ -74,7 +74,7 @@ if !exists(":VcsLog")
     \ endif
   command -nargs=? VcsCat
     \ if s:CheckWindow() |
-    \   call vcs#command#ViewFileRevision(expand('%:p'), '<args>', 'split') |
+    \   call vcs#command#ViewFileRevision('', '<args>', 'split') |
     \ endif
   command VcsAnnotate
     \ if s:CheckWindow() |
@@ -87,7 +87,7 @@ if !exists(":VcsLog")
 endif
 
 function! s:CheckWindow()
-  return &buftype == ''
+  return !exists('b:vcs_log')
 endfunction
 
 " }}}

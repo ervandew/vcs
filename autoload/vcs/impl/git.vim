@@ -252,8 +252,9 @@ function! vcs#impl#git#GetModifiedFiles() " {{{
   return files
 endfunction " }}}
 
-function! vcs#impl#git#Info(path) " {{{
-  let result = vcs#impl#git#Git('log -1 "' . a:path . '"')
+function! vcs#impl#git#Info(path, revision) " {{{
+  let cmd = 'log -1 ' . a:revision . ' "' . a:path . '"'
+  let result = vcs#impl#git#Git(cmd)
   if type(result) == 0
     return
   endif

@@ -56,9 +56,12 @@ function! vcs#command#Annotate(...) " {{{
     return
   endif
 
-  let path = exists('b:vcs_props') ? b:vcs_props.path :
-    \ vcs#util#GetRelativePath()
+  let path = vcs#util#GetRelativePath()
   let revision = len(a:000) > 0 ? a:000[0] : ''
+  if exists('b:vcs_props')
+    let path = b:vcs_props.path
+    let revision = b:vcs_props.revision
+  endif
 
   " let the vcs annotate the current working version so that the results line
   " up with the contents (assuming the underlying vcs supports it).
@@ -88,17 +91,24 @@ function! vcs#command#Diff(revision, ...) " {{{
   "   bang: when not empty, open the diff using the opposite of the configured
   "         default.
 
-  let path = expand('%:p')
-  let relpath = vcs#util#GetRelativePath()
+  let path = vcs#util#GetRelativePath()
+  if exists('b:vcs_props')
+    let path = b:vcs_props.path
+  endif
+
   let revision = a:revision
   if revision == ''
-    let revision = vcs#util#GetRevision(relpath)
+    let revision = vcs#util#GetRevision(path)
     if revision == ''
       call vcs#util#Echo('Unable to determine file revision.')
       return
     endif
   elseif revision == 'prev'
-    let revision = vcs#util#GetPreviousRevision(relpath)
+    if exists('b:vcs_props') && has_key(b:vcs_props, 'revision')
+      let revision = vcs#util#GetPreviousRevision(path, b:vcs_props.revision)
+    else
+      let revision = vcs#util#GetPreviousRevision(path)
+    endif
   endif
 
   let filename = expand('%:p')
@@ -133,11 +143,17 @@ endfunction " }}}
 function! vcs#command#Info() " {{{
   " Retrieves and echos info on the current file.
   let path = vcs#util#GetRelativePath()
+  let revision = ''
+  if exists('b:vcs_props')
+    let path = b:vcs_props.path
+    let revision = b:vcs_props.revision
+  endif
+
   let cwd = vcs#util#LcdRoot()
   try
     let Info = vcs#util#GetVcsFunction('Info')
     if type(Info) == 2
-      call Info(path)
+      call Info(path, revision)
     endif
   finally
     exec 'lcd ' . cwd
@@ -149,7 +165,14 @@ function! vcs#command#Log(args) " {{{
   " arguments.
   let cwd = vcs#util#LcdRoot()
   let args = a:args
-  let path = a:args == '' ? vcs#util#GetRelativePath() : ''
+  let path = ''
+  if a:args == ''
+    if exists('b:vcs_props')
+      let path = b:vcs_props.path
+    else
+      let path = vcs#util#GetRelativePath()
+    endif
+  endif
   try
     let Log = vcs#util#GetVcsFunction('Log')
     if type(Log) != 2
@@ -195,6 +218,7 @@ function! vcs#command#Log(args) " {{{
   call s:TempWindow(info.props, content)
   call s:LogSyntax()
   call s:LogMappings()
+  let b:vcs_log = 1
 
   " continuation of annotation support
   if jumpto != ''
@@ -259,7 +283,15 @@ endfunction " }}}
 
 function! vcs#command#ViewFileRevision(path, revision, open_cmd) " {{{
   " Open a read only view for the revision of the supplied version file.
-  let path = vcs#util#GetRelativePath(a:path)
+  if a:path == ''
+    if exists('b:vcs_props')
+      let path = b:vcs_props.path
+    else
+      let path = vcs#util#GetRelativePath()
+    endif
+  else
+    let path = vcs#util#GetRelativePath(a:path)
+  endif
   let revision = a:revision
   if revision == ''
     let revision = vcs#util#GetRevision(path)
@@ -271,7 +303,8 @@ function! vcs#command#ViewFileRevision(path, revision, open_cmd) " {{{
     let revision = vcs#util#GetPreviousRevision(path)
   endif
 
-  let props = exists('b:vcs_props') ? b:vcs_props : s:GetProps()
+  let props = exists('b:vcs_props') ? copy(b:vcs_props) : s:GetProps()
+  let props.revision = revision
 
   if exists('b:filename')
     let result = vcs#util#GoToBufferWindow(b:filename)
@@ -306,7 +339,7 @@ function! vcs#command#ViewFileRevision(path, revision, open_cmd) " {{{
   call vcs#util#GoToBufferWindowOrOpen(vcs_file, open_cmd)
   call s:VcsContent(lines)
 
-  let b:vcs_props = copy(props)
+  let b:vcs_props = props
 endfunction " }}}
 
 function! vcs#command#ViewCommitPatch(revision) " {{{
@@ -392,7 +425,9 @@ function! s:ApplyAnnotations(annotations) " {{{
   endfor
 
   let b:vcs_annotations = a:annotations
-  let b:vcs_props = s:GetProps()
+  if !exists('b:vcs_props')
+    let b:vcs_props = s:GetProps()
+  endif
 
   call s:HighlightGroups()
   call s:AnnotateInfo()
