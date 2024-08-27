@@ -404,7 +404,7 @@ function! s:GetPathForRevision(path, revision) " {{{
     \ '--pretty=tformat:"%h" ' .
     \ '--name-status ' .
     \ '--follow ' .
-    \ a:revision . '~1.. ' .
+    \ a:revision . '~1.. -- ' .
     \ '"' . path . '"'
   \ )
   if type(logs) != 0 && logs != ''
