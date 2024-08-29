@@ -643,40 +643,51 @@ function! s:Action() " {{{
       let url = substitute(url, '<id>', id, 'g')
       call vcs#web#OpenUrl(url)
 
-    " added file
-    elseif link == 'A'
-      let file = substitute(line, '.*|A|\s*', '', '')
+    elseif link == 'A' || link == 'M' || link == 'R' || link == 'D'
       let revision = s:GetRevision()
-      call vcs#command#ViewFileRevision(file, revision, '')
+      " pattern to match the file name after the link, which may itself be a
+      " link to the current version of the file
+      let regex = '.*|' . link . '|\s\+|\?\(.\{-}\)\(|\|$\)'
 
-    " modified or renamed file
-    elseif link == 'M' || link == 'R'
-      let revision = s:GetRevision()
-      if link == 'M'
-        let file = substitute(line, '.*|M|\s*', '', '')
-        let old = file
+      " added file
+      if link == 'A'
+        let file = substitute(line, regex, '\1', '')
+        let revision = s:GetRevision()
+        call vcs#command#ViewFileRevision(file, revision, '')
+
+      " deleted file
+      elseif link == 'D'
+        let file = substitute(line, regex, '\1', '')
+        let revision = s:GetRevision()
         let previous = vcs#util#GetPreviousRevision(file, revision)
+        call vcs#command#ViewFileRevision(file, previous, '')
       else
-        let file = substitute(line, '.*|R|.*->\s*', '', '')
-        let old = substitute(line, '.*|R|\s*\(.*\)\s->.*', '\1', '')
-        let previous = vcs#util#GetPreviousRevision(old)
-      endif
-      call vcs#command#ViewFileRevision(file, revision, '')
-      let buf1 = bufnr('%')
-      let orien = g:VcsDiffOrientation == 'horizontal' ? '' : 'vertical'
-      call vcs#command#ViewFileRevision(old, previous, 'bel ' . orien . ' split')
-      let buf2 = bufnr('%')
-      diffthis
-      call vcs#util#GoToBufferWindow(buf1)
-      diffthis
-      call s:Link(buf1, buf2)
+        " modified file
+        if link == 'M'
+          let file = substitute(line, regex, '\1', '')
+          let old = file
+          let previous = vcs#util#GetPreviousRevision(file, revision)
 
-    " deleted file
-    elseif link == 'D'
-      let file = substitute(line, '.*|D|\s*', '', '')
-      let revision = s:GetRevision()
-      let previous = vcs#util#GetPreviousRevision(file, revision)
-      call vcs#command#ViewFileRevision(file, previous, '')
+        " renamed file
+        else
+          let old_regex = substitute(regex, '\$', '\\>', '') . '\s->.*'
+          let old = substitute(line, old_regex, '\1', '')
+          let previous = vcs#util#GetPreviousRevision(old)
+
+          let new_regex = substitute(regex, '|R|', '|R|.*->', '')
+          let file = substitute(line, new_regex, '\1', '')
+        endif
+
+        call vcs#command#ViewFileRevision(file, revision, '')
+        let buf1 = bufnr('%')
+        let orien = g:VcsDiffOrientation == 'horizontal' ? '' : 'vertical'
+        call vcs#command#ViewFileRevision(old, previous, 'bel ' . orien . ' split')
+        let buf2 = bufnr('%')
+        diffthis
+        call vcs#util#GoToBufferWindow(buf1)
+        diffthis
+        call s:Link(buf1, buf2)
+      endif
 
     " file reference
     elseif filereadable(root . '/' . link)
