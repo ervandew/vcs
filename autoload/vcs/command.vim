@@ -60,7 +60,9 @@ function! vcs#command#Annotate(...) " {{{
   let revision = len(a:000) > 0 ? a:000[0] : ''
   if exists('b:vcs_props')
     let path = b:vcs_props.path
-    let revision = b:vcs_props.revision
+    if has_key(b:vcs_props, 'revision')
+      let revision = b:vcs_props.revision
+    endif
   endif
 
   " let the vcs annotate the current working version so that the results line
